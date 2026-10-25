@@ -1,0 +1,20 @@
+[
+  {
+    "id": "stable-question-id-from-approved-dataset",
+    "promptAr": "نص السؤال العربي كما اعتمده المحرر",
+    "answer": "12345",
+    "category": "تصنيف معتمد",
+    "type": "number",
+    "difficulty": "medium",
+    "locale": "ar",
+    "source": "اسم المصدر ورابطه أو مرجعه",
+    "enabled": false,
+    "hint": {
+      "range": "صياغة تلميح معياري معتمد",
+      "accuracy": "درجة الدقة التحريرية",
+      "note": "ملاحظة اختيارية معتمدة",
+      "approved": false,
+      "source": "مرجع التلميح"
+    }
+  }
+]

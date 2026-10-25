@@ -1,0 +1,80 @@
+# Dependencies
+node_modules/
+
+# Generated application output and caches
+dist/
+**/dist/
+build/
+**/build/
+coverage/
+**/coverage/
+.nyc_output/
+.vite/
+**/.vite/
+.cache/
+**/.cache/
+.gradle/
+.kotlin/
+.codex-npm-cache/
+.engine-check/
+*.tsbuildinfo
+
+# Local browser, editor, and operating-system state
+.tmp-samkaro-cdp/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.iml
+
+# Local configuration and credentials (keep safe templates)
+.env
+.env.*
+!.env.example
+!.env.*.example
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.*.example
+local.properties
+debug.keystore
+*.jks
+*.keystore
+
+# Logs and transient files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.tmp
+*.temp
+
+# Local database exports and files; Prisma migrations remain tracked
+*.dump
+*.sql.gz
+*.sqlite
+*.sqlite3
+*.db
+
+# Local browser-generated question drafts, retained on disk but not published
+server/data/browser-match-test/
+
+# Android/Gradle generated output
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Local secrets and environment files
+.env
+.env.*
+!.env.example
+
+# Dependencies and generated output
+**/node_modules/
+**/dist/
+**/build/
+**/coverage/
+.gradle/
+.codex-npm-cache/
+.tmp-samkaro-cdp/
+*.log

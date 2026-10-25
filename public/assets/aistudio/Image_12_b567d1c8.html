@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+
+<html class="dark" dir="rtl" lang="ar"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&amp;family=Tajawal:wght@400;500;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-secondary-fixed-variant": "#005236", "on-primary": "#3e2e00", "inverse-surface": "#e4e1e7", "on-error": "#690005", "error": "#ffb4ab", "on-tertiary": "#68000a", "tertiary-fixed": "#ffdad7", "on-secondary-container": "#00311f", "on-primary-fixed-variant": "#5a4300", "outline": "#9a8f7b", "primary-fixed": "#ffdf98", "secondary-fixed-dim": "#4edea3", "tertiary": "#ffdfdc", "inverse-on-surface": "#303034", "secondary-fixed": "#6ffbbe", "surface-container-highest": "#353439", "on-primary-fixed": "#251a00", "surface-container-high": "#2a292e", "on-secondary-fixed": "#002113", "on-tertiary-fixed": "#410004", "surface-container": "#1f1f23", "on-background": "#e4e1e7", "surface-bright": "#39393d", "on-primary-container": "#6b5100", "outline-variant": "#4e4635", "background": "#131317", "surface-tint": "#f1c03f", "surface-container-lowest": "#0e0e12", "on-tertiary-container": "#ac0c1c", "on-secondary": "#003824", "primary": "#ffe4a9", "on-tertiary-fixed-variant": "#930013", "error-container": "#93000a", "tertiary-fixed-dim": "#ffb3ad", "primary-fixed-dim": "#f1c03f", "surface-dim": "#131317", "surface-container-low": "#1b1b1f", "secondary-container": "#00a572", "inverse-primary": "#775a00", "primary-container": "#f5c443", "on-surface-variant": "#d2c5ae", "tertiary-container": "#ffb9b3", "on-error-container": "#ffdad6", "on-surface": "#e4e1e7", "surface-variant": "#353439", "surface": "#131317", "secondary": "#4edea3" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-xs": "0.25rem", "space-sm": "0.5rem", "space-lg": "1rem", "gutter": "0.75rem", "space-md": "0.75rem", "space-xl": "1.5rem", "margin": "1rem" }, "fontFamily": { "headline-lg": ["Cairo"], "label-sm": ["Cairo"], "body-lg": ["Tajawal"], "headline-sm": ["Cairo"], "body-md": ["Tajawal"], "body-sm": ["Tajawal"], "label-md": ["Cairo"], "headline-md": ["Cairo"], "headline-xl": ["Cairo"], "label-lg": ["Cairo"] }, "fontSize": { "headline-lg": ["24px", { "lineHeight": "32px", "fontWeight": "700" }], "label-sm": ["10px", { "lineHeight": "14px", "fontWeight": "700" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "500" }], "headline-sm": ["18px", { "lineHeight": "26px", "fontWeight": "600" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "500" }], "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }], "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "600" }], "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "700" }], "headline-xl": ["32px", { "lineHeight": "40px", "fontWeight": "800" }], "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "700" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-background text-on-surface font-body-md text-body-md flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface-container-lowest/85 backdrop-blur-xl shadow-[0_4px_20px_rgba(0,0,0,0.5)]"><div class="h-16 px-margin flex items-center justify-between"><button aria-label="رجوع" class="w-11 h-11 flex items-center justify-center rounded-full bg-surface-container text-on-surface hover:text-primary transition-colors" onclick="history.back()"><span class="material-symbols-outlined text-[20px]">arrow_forward_ios</span></button><h1 class="font-headline-sm text-headline-sm text-primary tracking-wide text-center">Live Game Table</h1><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></header><main class="flex flex-col relative w-full pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full pb-safe select-none overflow-hidden">
+<!-- Round Tracker Sub-Bar -->
+<div class="px-margin pt-2 pb-3 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm text-primary">الجولة ١ من ٥</span>
+<div class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-container-high">
+<span class="w-2 h-2 rounded-full bg-primary-container shadow-[0_0_8px_rgba(245,196,67,0.8)]"></span>
+<span class="w-1.5 h-1.5 rounded-full bg-surface-container-highest"></span>
+<span class="w-1.5 h-1.5 rounded-full bg-surface-container-highest"></span>
+<span class="w-1.5 h-1.5 rounded-full bg-surface-container-highest"></span>
+<span class="w-1.5 h-1.5 rounded-full bg-surface-container-highest"></span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-3 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-md text-label-md flex items-center gap-1.5 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">visibility</span>
+<span>تلميحك السري</span>
+</button>
+<button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Parchment Trivia Question Card -->
+<div class="px-margin mb-3">
+<div class="relative overflow-hidden rounded-xl bg-gradient-to-b from-[#2d2417] via-[#211a11] to-[#16120b] p-[1.5px] shadow-[0_10px_25px_rgba(0,0,0,0.6)]">
+<div class="relative rounded-xl bg-gradient-to-b from-[#3a2f1e] to-[#20180e] p-4 text-center">
+<!-- Corner filigree accents -->
+<span class="material-symbols-outlined absolute top-1.5 right-2 text-primary/30 text-[18px]">stars</span>
+<span class="material-symbols-outlined absolute top-1.5 left-2 text-primary/30 text-[18px]">stars</span>
+<div class="flex items-center justify-center gap-2 mb-1">
+<span class="material-symbols-outlined text-primary-container text-[18px]">quiz</span>
+<span class="font-label-md text-label-md text-primary/80 tracking-wider">سؤال التخمين الثقافي</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-primary font-bold leading-relaxed px-2">
+          ما عدد سكان كندا تقريباً في عام ٢٠٢٠؟
+        </h2>
+<div class="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-lowest/80 text-secondary font-label-sm text-label-sm">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+<span>دورك في التخمين أو المراهنة الآن</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Central Felt Casino Table Arena -->
+<div class="relative mx-margin rounded-[2.5rem] bg-gradient-to-b from-[#1a0f0a] via-[#120a07] to-[#080504] p-3 shadow-[inset_0_0_30px_rgba(0,0,0,0.9),0_12px_36px_rgba(0,0,0,0.7)] flex flex-col justify-between min-h-[360px]">
+<!-- Outer Felt Ring Decorator -->
+<div class="absolute inset-1 rounded-[2.25rem] pointer-events-none opacity-40 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-900/20 via-transparent to-transparent"></div>
+<!-- Top Players Row (Maya & Karim) -->
+<div class="relative z-10 flex items-center justify-between px-3 pt-1">
+<!-- Player Maya -->
+<div class="flex flex-col items-center group">
+<div class="relative">
+<div class="w-13 h-13 w-[52px] h-[52px] rounded-full p-0.5 bg-surface-container-highest shadow-md">
+<img class="w-full h-full object-cover rounded-full" data-alt="Female poker player avatar Maya smiling with confident expression, studio casino lighting with warm rim light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDka1EnuABx_BzdK9qBBjPB_2peVxw_4QOwyYLRXVMRJ910wVGbCn5zbnSli_zDrLwiQQDO4goAFkCOzd50X2ke3-ivZjpwPQIW-lk_qXrMphjo2wJcLcD2_ebwkJyKOinjO7iPsMlrElNdHZTeZzoxQpciIX06OPUg521FVjxrnk7hzX0-HT7UhAp0tije8hVRUOgT5kjTjdqh1nlUeah1FZw12W4OzTAanJ2ePd6rNhZxtK7sNUTdZQ"/>
+</div>
+<span class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-secondary flex items-center justify-center text-[10px] text-on-secondary shadow">
+<span class="material-symbols-outlined text-[11px]">done</span>
+</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface mt-1">Maya</span>
+<div class="mt-0.5 px-2 py-0.5 rounded-full bg-surface-container-lowest flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-primary-container text-[12px]">monetization_on</span>
+<span class="font-label-sm text-label-sm text-primary font-bold">480</span>
+</div>
+</div>
+<!-- Turn Timer & Table Identity -->
+<div class="flex flex-col items-center">
+<div class="relative flex items-center justify-center w-12 h-12 rounded-full bg-surface-container-high/80 shadow-inner">
+<svg class="w-12 h-12 transform -rotate-90" viewbox="0 0 48 48">
+<circle class="text-surface-container-highest" cx="24" cy="24" fill="none" r="20" stroke="currentColor" stroke-width="3"></circle>
+<circle class="text-primary-container transition-all duration-1000" cx="24" cy="24" fill="none" id="timer-stroke" r="20" stroke="currentColor" stroke-dasharray="125.6" stroke-dashoffset="35" stroke-linecap="round" stroke-width="3.5"></circle>
+</svg>
+<span class="absolute font-headline-sm text-headline-sm text-primary font-bold" id="timer-text">18</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-1">ثانية للتفكير</span>
+</div>
+<!-- Player Karim -->
+<div class="flex flex-col items-center">
+<div class="relative">
+<div class="w-[52px] h-[52px] rounded-full p-0.5 bg-surface-container-highest shadow-md">
+<img class="w-full h-full object-cover rounded-full" data-alt="Male player avatar Karim wearing elegant dark sunglasses and smirk, luxury poker lounge atmosphere" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCl4lX6TE092FRUEngkDej_SX7MvZg7jfcxXrNpWy6mdBX_okjGdno1lOJfIx9fqxkPGetrVAcvzAhRcW4sglH3O8Ar2CEJjtlD3wlLrmdyb4hZdyzNM8PPYYPeLw57fSB0VZoNAKxEx_hrn16EilhsuWALmlLcBdv1J8zn5E8hJoInUMCkXg3WtHlpnaEy2AYxOyeQGEGBoXf9deDHt_36mv5v3K-oxJXDOIjQ0ErAxK4elrjPvStgXQ"/>
+</div>
+<span class="absolute -bottom-1 -left-1 px-1.5 py-0.2 rounded-full bg-primary-container text-on-primary-fixed font-label-sm text-[9px] font-bold">
+            راهن
+          </span>
+</div>
+<span class="font-label-md text-label-md text-on-surface mt-1">Karim</span>
+<div class="mt-0.5 px-2 py-0.5 rounded-full bg-surface-container-lowest flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-primary-container text-[12px]">monetization_on</span>
+<span class="font-label-sm text-label-sm text-primary font-bold">520</span>
+</div>
+</div>
+</div>
+<!-- Center Felt Stage: The Pot & Chips -->
+<div class="relative z-10 flex flex-col items-center justify-center my-auto py-2">
+<!-- Glow Pod -->
+<div class="relative px-6 py-2.5 rounded-2xl bg-gradient-to-b from-[#241a10] via-[#161009] to-[#0c0805] shadow-[0_8px_20px_rgba(0,0,0,0.8)] flex flex-col items-center">
+<div class="flex items-center gap-1.5 text-on-surface-variant font-label-md text-label-md">
+<span class="material-symbols-outlined text-primary-container text-[16px]">toll</span>
+<span class="tracking-wider">إجمالي الرهان (Pot)</span>
+</div>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="material-symbols-outlined text-primary-container text-[24px]">monetization_on</span>
+<span class="font-headline-lg text-headline-lg text-primary font-extrabold tracking-tight" id="current-pot">1,250</span>
+</div>
+<!-- Stacked Decorative Mini Chips -->
+<div class="flex items-center -space-x-1 mt-1 rtl:space-x-reverse">
+<span class="w-3.5 h-3.5 rounded-full bg-primary-container shadow-sm"></span>
+<span class="w-3.5 h-3.5 rounded-full bg-secondary shadow-sm"></span>
+<span class="w-3.5 h-3.5 rounded-full bg-error shadow-sm"></span>
+<span class="w-3.5 h-3.5 rounded-full bg-primary shadow-sm"></span>
+</div>
+</div>
+</div>
+<!-- Middle-Side Players Row (Nour & Omar) -->
+<div class="relative z-10 flex items-center justify-between px-1">
+<!-- Player Nour -->
+<div class="flex flex-col items-center -mt-8">
+<div class="relative">
+<div class="w-12 h-12 rounded-full p-0.5 bg-surface-container-highest shadow-md">
+<img class="w-full h-full object-cover rounded-full" data-alt="Female avatar Nour with intense focused gaze and subtle smile, dark ambient velvet casino background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAzqaSDjyVPTkpiodgM8FP5T98B8ha883R8VjzTy9ztS5HO-4DXOkL1mvxI7NSAr02iiAE7r3aX39O6tjOwfvsPqkJdjl0KZHhzP8k0swqC8vw6HaeoOaowUT31rHxzTjdcQFQHcXiMNZGti5aS6NThjUFygSnI8GtJxW6OXy0XJyCR-k_NSyX4y7FpJjM_msyzt2JK-DLZfejDstBL7_nCW0YIjq3zIvdb95DUBrKRFYkLge0MFdNMCA"/>
+</div>
+<span class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-secondary flex items-center justify-center text-[10px] text-on-secondary shadow">
+<span class="material-symbols-outlined text-[11px]">done</span>
+</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface mt-1">Nour</span>
+<div class="mt-0.5 px-2 py-0.5 rounded-full bg-surface-container-lowest flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-primary-container text-[12px]">monetization_on</span>
+<span class="font-label-sm text-label-sm text-primary font-bold">310</span>
+</div>
+</div>
+<!-- Player Omar -->
+<div class="flex flex-col items-center -mt-8">
+<div class="relative">
+<div class="w-12 h-12 rounded-full p-0.5 bg-surface-container-highest shadow-md">
+<img class="w-full h-full object-cover rounded-full" data-alt="Male player avatar Omar smiling casually with stylish beard, high stakes VIP felt table aura" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHkIb9pzaOrq25gEOsc7h9BFTuDSzAY3i1W3lri8c9KT8Ioc2-8IWxOIwbBKXFJUyf40rWNTSiIjWvYlUmRmnbcxxd239WjpNQmfFLA88RL_CMq4SGm5KYVzrva1c7yDGLMar6kRB53YTO82P6gIjq0H4buWGgwP_Wha5iSdA_iuKjztSX1sr5YHGsfROcEPyWAObuYL5w3DOgvlHC7h7UhOSwuP_AjmBODekri64ypHh3nixEHtxswg"/>
+</div>
+<span class="absolute -bottom-1 -left-1 w-4 h-4 rounded-full bg-secondary flex items-center justify-center text-[10px] text-on-secondary shadow">
+<span class="material-symbols-outlined text-[11px]">done</span>
+</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface mt-1">Omar</span>
+<div class="mt-0.5 px-2 py-0.5 rounded-full bg-surface-container-lowest flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-primary-container text-[12px]">monetization_on</span>
+<span class="font-label-sm text-label-sm text-primary font-bold">600</span>
+</div>
+</div>
+</div>
+<!-- Bottom Seat: Main User ("أنت") -->
+<div class="relative z-10 flex flex-col items-center pb-1">
+<div class="relative flex flex-col items-center cursor-pointer transform active:scale-95 transition-transform">
+<div class="relative p-1 rounded-full bg-gradient-to-b from-primary via-primary-container to-on-primary-container shadow-[0_0_20px_rgba(245,196,67,0.45)]">
+<div class="w-14 h-14 rounded-full overflow-hidden bg-surface-container-lowest">
+<img class="w-full h-full object-cover" data-alt="Hero Arabic male gamer avatar with trendy sunglasses and neat beard, dramatic golden rim lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDlxS9rDD97_Ssf6RNRAhspU-J3qX1Qm8WzqCeyxynaU3qEkSc_0KUyOz5Pt01xrIODAfjjYPo93QynwAPgVj6ceUXZ2vyMMPrrF0ovQJLYmlWWRSKiErF6mgPIVzOeNOKqAzso24Sd8T2caWKAf_Go1aPQS4AL6w69QzjMKkJxDGv13iypG-Hq-xMhQD9s1qh7Sbz-P0SPPs0U55KH5r3MGDB69Ceikfvsd0cwEMJDxB4Dr8pMCgxekw"/>
+</div>
+<!-- Turn Crown Badge -->
+<span class="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-primary-container text-on-primary font-label-sm text-[10px] font-extrabold shadow flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[12px]">crown</span>
+            دورك
+          </span>
+</div>
+<div class="mt-1 flex items-center gap-1.5">
+<span class="font-headline-sm text-headline-sm text-primary font-bold">أنت</span>
+<div class="px-2.5 py-0.5 rounded-full bg-surface-container-lowest flex items-center gap-1 shadow-inner">
+<span class="material-symbols-outlined text-primary-container text-[13px]">monetization_on</span>
+<span class="font-label-md text-label-md text-primary font-extrabold" id="player-chips">450</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Tactical Betting Control Deck -->
+<div class="px-margin mt-3 mb-2">
+<!-- Quick Status Pill -->
+<div class="flex items-center justify-between px-3 py-1.5 mb-2 rounded-xl bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary-container text-[15px]">info</span>
+<span>المطلوب للمتابعة: ٥٠ فيشة</span>
+</div>
+<span class="text-primary font-bold">رصيدك: ٤٥٠</span>
+</div>
+<!-- 4 High-Impact Casino Action Triggers -->
+<div class="grid grid-cols-4 gap-2">
+<!-- 1. Fold (انسحاب) -->
+<button class="h-16 rounded-2xl bg-gradient-to-b from-error-container to-[#600004] text-on-error flex flex-col items-center justify-center p-1.5 shadow-[0_4px_12px_rgba(147,0,10,0.4)] active:scale-95 transition-all" id="btn-fold">
+<span class="material-symbols-outlined text-[22px] font-bold">close</span>
+<span class="font-headline-sm text-headline-sm font-bold mt-0.5">انسحاب</span>
+</button>
+<!-- 2. Call / Check (مساواة 50) -->
+<button class="h-16 rounded-2xl bg-gradient-to-b from-[#1e40af] to-[#172554] text-white flex flex-col items-center justify-center p-1.5 shadow-[0_4px_12px_rgba(30,64,175,0.4)] active:scale-95 transition-all" id="btn-call">
+<span class="font-headline-sm text-headline-sm font-bold">مساواة</span>
+<div class="mt-0.5 px-2 py-0.5 rounded-full bg-white/20 text-white font-label-md text-label-md font-bold flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[12px]">monetization_on</span>
+<span>50</span>
+</div>
+</button>
+<!-- 3. Raise (زيادة 100) -->
+<button class="h-16 rounded-2xl bg-gradient-to-b from-[#059669] to-[#064e3b] text-white flex flex-col items-center justify-center p-1.5 shadow-[0_4px_12px_rgba(5,150,105,0.4)] active:scale-95 transition-all" id="btn-raise">
+<span class="font-headline-sm text-headline-sm font-bold">زيادة</span>
+<div class="mt-0.5 px-2 py-0.5 rounded-full bg-white/20 text-white font-label-md text-label-md font-bold flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[12px]">arrow_upward</span>
+<span>100</span>
+</div>
+</button>
+<!-- 4. All-In (الكل 450) -->
+<button class="h-16 rounded-2xl bg-gradient-to-b from-primary via-primary-container to-on-primary-container text-on-primary flex flex-col items-center justify-center p-1.5 shadow-[0_4px_16px_rgba(245,196,67,0.4)] active:scale-95 transition-all" id="btn-allin">
+<span class="font-headline-sm text-headline-sm font-black text-on-primary">الكل</span>
+<div class="mt-0.5 px-2 py-0.5 rounded-full bg-on-primary/15 text-on-primary font-label-md text-label-md font-extrabold flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[12px]">local_fire_department</span>
+<span>450</span>
+</div>
+</button>
+</div>
+</div>
+<!-- Interactive Feedback Drawer / Toast Container -->
+<div class="mx-margin mt-1 mb-2 px-3 py-2 rounded-xl bg-surface-container hidden items-center justify-between text-on-surface" id="game-feedback-toast">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]" id="toast-icon">check_circle</span>
+<span class="font-body-md text-body-md" id="toast-message">تم الرهان بنجاح!</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">الآن</span>
+</div>
+</div>
+<script>
+  // Tactical Betting Interactions & Micro-Delights
+  (function() {
+    let potValue = 1250;
+    let playerChips = 450;
+    let timerSeconds = 18;
+
+    const potEl = document.getElementById('current-pot');
+    const playerChipsEl = document.getElementById('player-chips');
+    const timerTextEl = document.getElementById('timer-text');
+    const timerStrokeEl = document.getElementById('timer-stroke');
+    const toast = document.getElementById('game-feedback-toast');
+    const toastMsg = document.getElementById('toast-message');
+    const toastIcon = document.getElementById('toast-icon');
+
+    function showFeedback(text, icon = 'check_circle', isError = false) {
+      if (!toast) return;
+      toastMsg.textContent = text;
+      toastIcon.textContent = icon;
+      toastIcon.className = isError 
+        ? 'material-symbols-outlined text-error text-[20px]' 
+        : 'material-symbols-outlined text-primary-container text-[20px]';
+      
+      toast.classList.remove('hidden');
+      toast.classList.add('flex');
+      
+      setTimeout(() => {
+        toast.classList.add('hidden');
+        toast.classList.remove('flex');
+      }, 2500);
+    }
+
+    // Timer Tick
+    const timerInterval = setInterval(() => {
+      if (timerSeconds > 0) {
+        timerSeconds--;
+        if (timerTextEl) timerTextEl.textContent = timerSeconds;
+        if (timerStrokeEl) {
+          const totalDash = 125.6;
+          const offset = totalDash - (timerSeconds / 20) * totalDash;
+          timerStrokeEl.style.strokeDashoffset = offset;
+        }
+      } else {
+        clearInterval(timerInterval);
+        showFeedback('انتهى وقت المراهنة!', 'schedule', true);
+      }
+    }, 1000);
+
+    // Call 50
+    document.getElementById('btn-call')?.addEventListener('click', () => {
+      if (playerChips >= 50) {
+        playerChips -= 50;
+        potValue += 50;
+        playerChipsEl.textContent = playerChips;
+        potEl.textContent = potValue.toLocaleString('en-US');
+        showFeedback('قمت بمساواة الرهان بقيمة 50 فيشة', 'done_all');
+      }
+    });
+
+    // Raise 100
+    document.getElementById('btn-raise')?.addEventListener('click', () => {
+      if (playerChips >= 100) {
+        playerChips -= 100;
+        potValue += 100;
+        playerChipsEl.textContent = playerChips;
+        potEl.textContent = potValue.toLocaleString('en-US');
+        showFeedback('قمت بزيادة الرهان +100 فيشة!', 'rocket_launch');
+      }
+    });
+
+    // All In
+    document.getElementById('btn-allin')?.addEventListener('click', () => {
+      if (playerChips > 0) {
+        potValue += playerChips;
+        const allInBet = playerChips;
+        playerChips = 0;
+        playerChipsEl.textContent = playerChips;
+        potEl.textContent = potValue.toLocaleString('en-US');
+        showFeedback(`شجاعة استثنائية! All-In بكل ما تملك (${allInBet} فيشة)`, 'local_fire_department');
+      }
+    });
+
+    // Fold
+    document.getElementById('btn-fold')?.addEventListener('click', () => {
+      showFeedback('تم الانسحاب من هذه الجولة، حظ أفضل بالجولة القادمة!', 'cancel', true);
+    });
+  })();
+</script></main></body></html>

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+
+<html class="dark" dir="rtl" lang="ar"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&amp;family=Tajawal:wght@400;500;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-secondary-fixed-variant": "#005236", "on-primary": "#3e2e00", "inverse-surface": "#e4e1e7", "on-error": "#690005", "error": "#ffb4ab", "on-tertiary": "#68000a", "tertiary-fixed": "#ffdad7", "on-secondary-container": "#00311f", "on-primary-fixed-variant": "#5a4300", "outline": "#9a8f7b", "primary-fixed": "#ffdf98", "secondary-fixed-dim": "#4edea3", "tertiary": "#ffdfdc", "inverse-on-surface": "#303034", "secondary-fixed": "#6ffbbe", "surface-container-highest": "#353439", "on-primary-fixed": "#251a00", "surface-container-high": "#2a292e", "on-secondary-fixed": "#002113", "on-tertiary-fixed": "#410004", "surface-container": "#1f1f23", "on-background": "#e4e1e7", "surface-bright": "#39393d", "on-primary-container": "#6b5100", "outline-variant": "#4e4635", "background": "#131317", "surface-tint": "#f1c03f", "surface-container-lowest": "#0e0e12", "on-tertiary-container": "#ac0c1c", "on-secondary": "#003824", "primary": "#ffe4a9", "on-tertiary-fixed-variant": "#930013", "error-container": "#93000a", "tertiary-fixed-dim": "#ffb3ad", "primary-fixed-dim": "#f1c03f", "surface-dim": "#131317", "surface-container-low": "#1b1b1f", "secondary-container": "#00a572", "inverse-primary": "#775a00", "primary-container": "#f5c443", "on-surface-variant": "#d2c5ae", "tertiary-container": "#ffb9b3", "on-error-container": "#ffdad6", "on-surface": "#e4e1e7", "surface-variant": "#353439", "surface": "#131317", "secondary": "#4edea3" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-xs": "0.25rem", "space-sm": "0.5rem", "space-lg": "1rem", "gutter": "0.75rem", "space-md": "0.75rem", "space-xl": "1.5rem", "margin": "1rem" }, "fontFamily": { "headline-lg": ["Cairo"], "label-sm": ["Cairo"], "body-lg": ["Tajawal"], "headline-sm": ["Cairo"], "body-md": ["Tajawal"], "body-sm": ["Tajawal"], "label-md": ["Cairo"], "headline-md": ["Cairo"], "headline-xl": ["Cairo"], "label-lg": ["Cairo"] }, "fontSize": { "headline-lg": ["24px", { "lineHeight": "32px", "fontWeight": "700" }], "label-sm": ["10px", { "lineHeight": "14px", "fontWeight": "700" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "500" }], "headline-sm": ["18px", { "lineHeight": "26px", "fontWeight": "600" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "500" }], "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }], "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "600" }], "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "700" }], "headline-xl": ["32px", { "lineHeight": "40px", "fontWeight": "800" }], "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "700" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-background text-on-surface font-body-md text-body-md flex flex-col min-h-screen selection:bg-primary-container selection:text-on-primary-container"><header class="fixed top-0 w-full z-50 pt-safe bg-surface-container-lowest/85 backdrop-blur-xl shadow-[0_4px_20px_rgba(0,0,0,0.5)]"><div class="h-16 px-margin flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-xs"><div class="relative flex items-center gap-space-xs bg-surface-container-high py-space-xs px-space-sm rounded-full"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><div class="flex flex-col text-right"><span class="font-label-sm text-label-sm text-primary leading-tight font-bold">المستوى ١٤</span><span class="font-label-md text-label-md text-on-surface leading-tight font-bold">العراب</span></div></div><div class="flex items-center gap-1 bg-surface-container-low px-space-sm py-space-xs rounded-full"><span class="material-symbols-outlined text-primary-container text-[18px]">monetization_on</span><span class="font-label-md text-label-md text-primary font-bold tracking-tight">125,500</span></div></div><div class="flex items-center gap-space-xs"><button aria-label="الإشعارات" class="w-11 h-11 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">notifications</span></button><button aria-label="المتجر الذهبي" class="w-11 h-11 flex items-center justify-center rounded-full bg-surface-container text-primary-container hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">toll</span></button></div></div></header><main class="flex flex-col relative w-full pt-16 pb-24 bg-surface min-h-screen"><div class="flex flex-col w-full px-margin pb-6 gap-space-md">
+<!-- Top Bar: Room Code & Exit Action -->
+<div class="flex items-center justify-between w-full bg-surface-container-low/80 backdrop-blur-md px-space-md py-space-sm rounded-xl shadow-md">
+<!-- Exit / Leave Button -->
+<button class="flex items-center gap-1.5 px-space-md py-space-xs rounded-full bg-error-container/80 text-on-error hover:bg-error-container active:scale-95 transition-all shadow-sm" id="leaveBtn">
+<span class="material-symbols-outlined text-[18px]">logout</span>
+<span class="font-label-md text-label-md">مغادرة</span>
+</button>
+<!-- Room Code Badge with Copy Interaction -->
+<div class="flex items-center gap-space-sm">
+<div class="flex flex-col items-center">
+<span class="font-label-sm text-label-sm text-on-surface-variant">رمز الغرفة الملكية</span>
+<div class="flex items-center gap-1.5 bg-surface-container-highest px-3 py-1 rounded-full shadow-inner">
+<span class="font-headline-sm text-headline-sm text-primary-container tracking-wider font-extrabold select-all" id="roomCodeText">7K9D2</span>
+<button aria-label="نسخ رمز الغرفة" class="flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors" id="copyCodeBtn">
+<span class="material-symbols-outlined text-[16px]" id="copyIcon">content_copy</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Active Count Indicator -->
+<div class="flex items-center gap-1 bg-surface-container px-space-sm py-space-xs rounded-full">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-secondary font-bold">6/8</span>
+</div>
+</div>
+<!-- Ambient Casino Banner -->
+<div class="relative w-full rounded-xl overflow-hidden shadow-xl bg-surface-container-high p-space-md flex items-center justify-between">
+<div class="absolute inset-0 bg-gradient-to-r from-primary-container/10 via-transparent to-secondary-container/10 pointer-events-none"></div>
+<div class="flex flex-col z-10">
+<div class="flex items-center gap-1 text-primary-container">
+<span class="material-symbols-outlined text-[18px]">workspace_premium</span>
+<span class="font-label-sm text-label-sm font-bold uppercase tracking-widest">طاولة كبار الشخصيات</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface mt-0.5">صالة التخمين والمراوغة</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">انتظر اكتمال النصاب أو ابدأ الجولة الآن كقائد للطاولة</p>
+</div>
+<div class="relative w-16 h-16 shrink-0 rounded-xl overflow-hidden shadow-lg bg-surface-container-lowest flex items-center justify-center">
+<img class="w-full h-full object-cover opacity-90" data-alt="A luxury velvet poker chip stack with a gleaming 3D gold spade emblem embossed on top, surrounded by dramatic dark casino studio rim lighting with warm golden bokeh highlights, hyper-realistic 3D rendering" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDStI_2k0jxYe-FZemx-8L7WAOerP0Y7rcSBROI03VZhFliihDUmujxQwhH2nnMmAMdCfoS8KFw1o6jzg3v2ucCJKaEdyxosaGKVHioSmUzc3nwqSiuHvwJ8DxMyXZQSh2EUex-WNktF4SzY-tQgIyvkCtOYe-ibIzDT-rIs1WP-vnScPYvai-Fa-8YvVRzB8HX_Xx1Qgb4M6MeJY4U545CYYVA8yrregOthrz_KXbUVE-SRrSaUdVvOg"/>
+</div>
+</div>
+<!-- Players Felt Grid (2 Rows x 4 Columns) -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between px-1">
+<span class="font-label-lg text-label-lg text-primary">المقاعد المتاحة (6 جاهزون)</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">lock_clock</span>
+        تحديث تلقائي
+      </span>
+</div>
+<div class="grid grid-cols-4 gap-space-sm p-space-sm rounded-xl bg-surface-container-low shadow-md">
+<!-- Player 1: Host (You) -->
+<div class="flex flex-col items-center gap-1 p-2 rounded-lg bg-surface-container transition-transform active:scale-95">
+<div class="relative">
+<div class="w-14 h-14 rounded-full overflow-hidden shadow-md bg-surface-container-highest">
+<img class="w-full h-full object-cover" data-alt="Close-up avatar of a stylish young Middle Eastern gentleman wearing reflective dark aviator sunglasses and sleek black hair, against an ultra-dark luxurious VIP casino backdrop with ambient golden sparkles, hyper-realistic digital character" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZzWxjvzjlVPfs8nTQOghlkLX5zdugsgP5qyNV_y-W1q81xmYSc8aWJWJ-hGRzGy_p2g5PvWmbUvYgy8hj6sR30kMarovUtVK4DXeY31sRYKNKJT6TQPl9FFNKr0j8Mf1EQGyFtDrTEGyT_8H_H6txlI8lzV3qXU81qBJWv0xnPfupLNCtbP388Qv1SLFNZquPqt-7i2KTOBUYJ0niVLhlJaeC_ntrPA_1J-ep9MuNKM18ARlnVgQWNA"/>
+</div>
+<!-- Host Golden Crown Pill -->
+<div class="absolute -top-1 -right-1 bg-primary-container text-on-primary-container w-5 h-5 rounded-full flex items-center justify-center shadow-md">
+<span class="material-symbols-outlined text-[12px] font-bold">star</span>
+</div>
+<!-- Ready Badge -->
+<div class="absolute -bottom-1 inset-x-0 mx-auto w-fit px-1.5 py-0.2 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-[9px] shadow-sm flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[10px]">done</span>
+<span>جاهز</span>
+</div>
+</div>
+<span class="font-headline-sm text-[13px] text-primary mt-1 truncate max-w-full font-bold">أنت (المضيف)</span>
+</div>
+<!-- Player 2: Maya -->
+<div class="flex flex-col items-center gap-1 p-2 rounded-lg bg-surface-container transition-transform active:scale-95">
+<div class="relative">
+<div class="w-14 h-14 rounded-full overflow-hidden shadow-md bg-surface-container-highest">
+<img class="w-full h-full object-cover" data-alt="Portrait of an elegant young woman named Maya with long wavy brunette hair and confident warm smile, wearing dark velvet clothing with subtle golden ambient rim lights, luxury night casino tournament style, hyper-realistic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgDWT5DhOIo_zzKCVCkLm8CiCzTZiKk_lVVFEaDMqUXFx1xzUbZzchDfRk5IUcVPCO_JjVthI6qD4J0_eYW0b4f4uVS86sUBiJGE814k5rQTfMNB2VEyPeF_9HO_0XqkafAU8T40d3GIVcfqGw0WthR0TTwwZu3pAU3JiOtqo9JApaG4Js2IihANtdNfC5zL5F6xuXZXDUjZwW_YEvWBhmJiXNY_4eD1Aance08P14602PB2-5UBgRtQ"/>
+</div>
+<!-- Ready Badge -->
+<div class="absolute -bottom-1 inset-x-0 mx-auto w-fit px-1.5 py-0.2 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-[9px] shadow-sm flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[10px]">done</span>
+<span>جاهز</span>
+</div>
+</div>
+<span class="font-headline-sm text-[13px] text-on-surface mt-1 truncate max-w-full">Maya</span>
+</div>
+<!-- Player 3: Karim -->
+<div class="flex flex-col items-center gap-1 p-2 rounded-lg bg-surface-container transition-transform active:scale-95">
+<div class="relative">
+<div class="w-14 h-14 rounded-full overflow-hidden shadow-md bg-surface-container-highest">
+<img class="w-full h-full object-cover" data-alt="Portrait of a focused male gamer Karim with trimmed beard, wearing a charcoal hoodie against a dark poker lounge background with amber reflections, photorealistic digital avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCbRWR8moDr347Y4xkOfYE_AFLZEiqDFls6eA9ksZHdk0wrfrxfBSKhpOOvcMN0ZQ6gIUxXMz5zYULeGme8chk-sSFszF-J5eR7mUgoAwdl0sLaT6AQHmRYbTZTXXyWeW7PZGWKxAk8bE69IWA_QVnAm4NAGXXvOHNIfkGdCfgXVk7QvTu2SpdY7zqTftgO52cB3wL9SfSc6B-xK4E1v-6H4UTmSP0b-8vtIwrK1CpJ3UT7vFwVa6zA9Q"/>
+</div>
+<!-- Ready Badge -->
+<div class="absolute -bottom-1 inset-x-0 mx-auto w-fit px-1.5 py-0.2 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-[9px] shadow-sm flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[10px]">done</span>
+<span>جاهز</span>
+</div>
+</div>
+<span class="font-headline-sm text-[13px] text-on-surface mt-1 truncate max-w-full">Karim</span>
+</div>
+<!-- Player 4: Omar -->
+<div class="flex flex-col items-center gap-1 p-2 rounded-lg bg-surface-container transition-transform active:scale-95">
+<div class="relative">
+<div class="w-14 h-14 rounded-full overflow-hidden shadow-md bg-surface-container-highest">
+<img class="w-full h-full object-cover" data-alt="Portrait of Omar, an energetic young man laughing warmly, wearing a smart casual dark tee with warm studio spotlighting and soft golden bokeh, high quality digital photography portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAT7aoGQWCJrqALOgPWIAAMSpKuKeffosn-uO5b2mkyT4L6VGet3ZmZY2Pbfo8hUYKy6FsfdY9EeQ6U29rs5HQWXCx6Tib7fk94wpdfwO65dJ_LfaM36yX2Fqkim-HodANYLlka4vPaeexJzzKKr809AcRQpHVvpcrjyqa9OVtPVvpc64SOftEqJC0RepK6alaGkkEvW5hS7_hsdljJ67kfXFTnGeWcpvekwVM78XbmgtnWlZCM6zQdeg"/>
+</div>
+<!-- Ready Badge -->
+<div class="absolute -bottom-1 inset-x-0 mx-auto w-fit px-1.5 py-0.2 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-[9px] shadow-sm flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[10px]">done</span>
+<span>جاهز</span>
+</div>
+</div>
+<span class="font-headline-sm text-[13px] text-on-surface mt-1 truncate max-w-full">Omar</span>
+</div>
+<!-- Player 5: Nour -->
+<div class="flex flex-col items-center gap-1 p-2 rounded-lg bg-surface-container transition-transform active:scale-95">
+<div class="relative">
+<div class="w-14 h-14 rounded-full overflow-hidden shadow-md bg-surface-container-highest">
+<img class="w-full h-full object-cover" data-alt="Portrait avatar of Nour, a poised Arab woman with dark hazel eyes and sleek tied-back hair, wearing modern dark attire with subtle golden earrings, high-end dramatic lighting portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAx33RkO1vqYgR8km9ogQOoMYd0A0eSmi1Aufj2H4ImFa_3K0ImOMbCwjf7lAlAIX4SmpOO_ePDVMbtxbdEH-tu3C-UdOK15I-mtYNEbdoecusc6_LPd7kOWhF8QXEHvo7qjIjHpJlvfu20H3opck_VUITlA2FSUugJq6QZTzrvgaLZDJR8ehN9py2YPSPx5YR4rxlBXJKFsrhy-obznXtRHsB5djxRDybPgkAcqEI4RiUJEmA2U-vkuA"/>
+</div>
+<!-- Ready Badge -->
+<div class="absolute -bottom-1 inset-x-0 mx-auto w-fit px-1.5 py-0.2 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-[9px] shadow-sm flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[10px]">done</span>
+<span>جاهز</span>
+</div>
+</div>
+<span class="font-headline-sm text-[13px] text-on-surface mt-1 truncate max-w-full">Nour</span>
+</div>
+<!-- Player 6: Sara -->
+<div class="flex flex-col items-center gap-1 p-2 rounded-lg bg-surface-container transition-transform active:scale-95">
+<div class="relative">
+<div class="w-14 h-14 rounded-full overflow-hidden shadow-md bg-surface-container-highest">
+<img class="w-full h-full object-cover" data-alt="Avatar portrait of Sara, smiling friendly gamer with stylish curly hair and amber ambient glow on her cheekbones, set against an atmospheric dark VIP game club interior" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0nwzfsakQ7nAPbnBX7Qh20oUJJDlf-4Ctn6CMtz3gUjbL3bukBXalRTGi-Op-klL7dkZMyyQMwCvwGSMicLM_pADDBvBZD7uERyXsddjACAOWHN3vCUU5QcW5IU69oj9n_0PQwqfkHo0XqOAy6M5BVyLqwd8dBfX2dBf0CTILiCmwtMPZN8UnRRRVr19pvpDI7CuscfPBdApEdCGRARwAr_F3yY8Y5CGiTYNB43RsvoirK_P-fy8Dpg"/>
+</div>
+<!-- Ready Badge -->
+<div class="absolute -bottom-1 inset-x-0 mx-auto w-fit px-1.5 py-0.2 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-[9px] shadow-sm flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[10px]">done</span>
+<span>جاهز</span>
+</div>
+</div>
+<span class="font-headline-sm text-[13px] text-on-surface mt-1 truncate max-w-full">Sara</span>
+</div>
+<!-- Seat 7: Empty / Invite -->
+<div class="flex flex-col items-center justify-center gap-1 p-2 rounded-lg bg-surface-container-highest/40 hover:bg-surface-container-highest/60 transition-colors cursor-pointer group">
+<div class="w-14 h-14 rounded-full bg-surface-container-high flex flex-col items-center justify-center text-on-surface-variant group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[26px]">add</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-1">انتظار...</span>
+</div>
+<!-- Seat 8: Empty / Invite -->
+<div class="flex flex-col items-center justify-center gap-1 p-2 rounded-lg bg-surface-container-highest/40 hover:bg-surface-container-highest/60 transition-colors cursor-pointer group">
+<div class="w-14 h-14 rounded-full bg-surface-container-high flex flex-col items-center justify-center text-on-surface-variant group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[26px]">person_add</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-1">دعوة صديق</span>
+</div>
+</div>
+</div>
+<!-- Room Settings Bento Box -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between px-1">
+<span class="font-label-lg text-label-lg text-on-surface">إعدادات المباراة</span>
+<span class="font-label-sm text-label-sm text-primary flex items-center gap-1 cursor-pointer hover:underline">
+<span class="material-symbols-outlined text-[14px]">tune</span>
+        تعديل
+      </span>
+</div>
+<div class="grid grid-cols-4 gap-space-xs">
+<!-- Setting 1: Rounds -->
+<div class="flex flex-col items-center justify-center p-space-sm rounded-xl bg-surface-container-high text-center shadow-sm">
+<span class="material-symbols-outlined text-primary-container text-[20px] mb-0.5">style</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">5</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">جولات</span>
+</div>
+<!-- Setting 2: Timer -->
+<div class="flex flex-col items-center justify-center p-space-sm rounded-xl bg-surface-container-high text-center shadow-sm">
+<span class="material-symbols-outlined text-secondary-fixed-dim text-[20px] mb-0.5">timer</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">60</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">ثانية</span>
+</div>
+<!-- Setting 3: Initial Stakes -->
+<div class="flex flex-col items-center justify-center p-space-sm rounded-xl bg-surface-container-high text-center shadow-sm">
+<span class="material-symbols-outlined text-primary-container text-[20px] mb-0.5">monetization_on</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">500</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">شريحة</span>
+</div>
+<!-- Setting 4: Room Visibility -->
+<div class="flex flex-col items-center justify-center p-space-sm rounded-xl bg-surface-container-high text-center shadow-sm">
+<span class="material-symbols-outlined text-secondary text-[20px] mb-0.5">lock_open</span>
+<span class="font-headline-sm text-headline-sm text-secondary">عام</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">الدخول</span>
+</div>
+</div>
+</div>
+<!-- Live Mini Chat Feed Drawer -->
+<div class="flex flex-col gap-1.5 bg-surface-container-lowest/80 p-space-sm rounded-xl shadow-inner">
+<div class="flex items-center justify-between text-on-surface-variant text-[11px] px-1 font-label-sm">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-secondary">chat</span>
+        دردشة الغرفة المباشرة
+      </span>
+<span class="text-on-surface-variant">الكل متصل</span>
+</div>
+<!-- Messages Container -->
+<div class="flex flex-col gap-1 max-h-20 overflow-y-auto pr-1" id="chatFeed">
+<div class="flex items-center gap-2 text-body-sm font-body-sm bg-surface-container/60 px-2 py-1 rounded-lg">
+<span class="font-bold text-primary font-headline-sm text-[11px]">Maya:</span>
+<span class="text-on-surface text-[12px]">مستعدين للتحدي! لا أحد يخمن عشوائي هالمرة 😉</span>
+</div>
+<div class="flex items-center gap-2 text-body-sm font-body-sm bg-surface-container/60 px-2 py-1 rounded-lg">
+<span class="font-bold text-secondary font-headline-sm text-[11px]">Omar:</span>
+<span class="text-on-surface text-[12px]">الرهان مضاعف يا شباب 🔥</span>
+</div>
+</div>
+<!-- Quick Chat Input Bar -->
+<form class="flex items-center gap-space-xs mt-1" id="chatForm">
+<button class="w-9 h-9 shrink-0 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-container-high text-primary-container transition-colors" id="emojiBtn" type="button">
+<span class="material-symbols-outlined text-[20px]">mood</span>
+</button>
+<input class="flex-1 bg-surface-container text-on-surface font-body-md text-body-md px-3 py-1.5 rounded-full outline-none focus:bg-surface-container-high placeholder:text-on-surface-variant/70 text-right" id="chatInput" placeholder="اكتب رسالة سريعة للجميع..." type="text"/>
+<button aria-label="إرسال" class="w-9 h-9 shrink-0 flex items-center justify-center rounded-full bg-primary-container text-on-primary-container shadow-md active:scale-90 transition-transform" type="submit">
+<span class="material-symbols-outlined text-[18px]">send</span>
+</button>
+</form>
+</div>
+<!-- Primary Grand CTA: Start Game -->
+<div class="flex flex-col gap-space-xs mt-1">
+<button class="relative group w-full py-3.5 px-6 rounded-xl bg-gradient-to-b from-primary-fixed to-primary-container text-on-primary-fixed shadow-[0_0_24px_rgba(245,196,67,0.3)] hover:shadow-[0_0_32px_rgba(245,196,67,0.5)] active:scale-[0.98] transition-all flex items-center justify-center gap-2" id="startGameBtn">
+<span class="material-symbols-outlined text-[24px] text-on-primary-fixed group-hover:rotate-12 transition-transform">play_circle</span>
+<span class="font-headline-md text-headline-md font-extrabold tracking-wide">ابدأ المباراة الآن</span>
+</button>
+<div class="flex items-center justify-center gap-1.5 text-center">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">الحد الأدنى للبدء 4 لاعبين (تم استيفاء الشروط)</span>
+</div>
+</div>
+<!-- Toast Notification Template -->
+<div class="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-surface-container-highest text-primary font-headline-sm text-headline-sm shadow-2xl opacity-0 pointer-events-none transition-opacity duration-300 flex items-center gap-2" id="toast">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+<span id="toastMsg">تم نسخ رمز الغرفة بنجاح</span>
+</div>
+</div>
+<script>
+  // Copy Room Code micro-interaction
+  const copyBtn = document.getElementById('copyCodeBtn');
+  const copyIcon = document.getElementById('copyIcon');
+  const toast = document.getElementById('toast');
+  const toastMsg = document.getElementById('toastMsg');
+
+  function showToast(msg) {
+    if (!toast) return;
+    toastMsg.textContent = msg;
+    toast.classList.remove('opacity-0', 'pointer-events-none');
+    toast.classList.add('opacity-100');
+    setTimeout(() => {
+      toast.classList.add('opacity-0', 'pointer-events-none');
+      toast.classList.remove('opacity-100');
+    }, 2200);
+  }
+
+  if (copyBtn) {
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard?.writeText('7K9D2').then(() => {
+        copyIcon.textContent = 'done';
+        copyIcon.classList.add('text-secondary');
+        showToast('تم نسخ رمز الغرفة 7K9D2');
+        setTimeout(() => {
+          copyIcon.textContent = 'content_copy';
+          copyIcon.classList.remove('text-secondary');
+        }, 2000);
+      }).catch(() => {
+        showToast('رمز الغرفة: 7K9D2');
+      });
+    });
+  }
+
+  // Quick Chat Send interaction
+  const chatForm = document.getElementById('chatForm');
+  const chatInput = document.getElementById('chatInput');
+  const chatFeed = document.getElementById('chatFeed');
+  const emojiBtn = document.getElementById('emojiBtn');
+
+  const emojis = ['👑', '🔥', '🎲', '🤑', '🤫', '🃏'];
+  let emojiIdx = 0;
+
+  if (emojiBtn && chatInput) {
+    emojiBtn.addEventListener('click', () => {
+      chatInput.value += emojis[emojiIdx % emojis.length];
+      emojiIdx++;
+      chatInput.focus();
+    });
+  }
+
+  if (chatForm && chatInput && chatFeed) {
+    chatForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const val = chatInput.value.trim();
+      if (!val) return;
+
+      const newMsg = document.createElement('div');
+      newMsg.className = 'flex items-center gap-2 text-body-sm font-body-sm bg-surface-container/60 px-2 py-1 rounded-lg';
+      newMsg.innerHTML = '<span class="font-bold text-primary font-headline-sm text-[11px]">أنت:</span><span class="text-on-surface text-[12px]">' + val.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span>';
+      
+      chatFeed.appendChild(newMsg);
+      chatFeed.scrollTop = chatFeed.scrollHeight;
+      chatInput.value = '';
+    });
+  }
+
+  // Start game action trigger
+  const startGameBtn = document.getElementById('startGameBtn');
+  if (startGameBtn) {
+    startGameBtn.addEventListener('click', () => {
+      startGameBtn.innerHTML = '<span class="material-symbols-outlined text-[24px] animate-spin">refresh</span><span class="font-headline-md text-headline-md font-extrabold">جاري توزيع الأوراق...</span>';
+      setTimeout(() => {
+        showToast('بدأت الجولة الأولى!');
+      }, 600);
+    });
+  }
+
+  // Leave room trigger
+  const leaveBtn = document.getElementById('leaveBtn');
+  if (leaveBtn) {
+    leaveBtn.addEventListener('click', () => {
+      if (confirm('هل أنت متأكد من مغادرة طاولة الانتظار؟')) {
+        showToast('جاري المغادرة إلى اللوبي...');
+      }
+    });
+  }
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_-4px_24px_rgba(0,0,0,0.6)]" data-active-classes="text-primary-container font-headline-sm"><div class="flex justify-around items-center h-16 px-space-sm"><a class="flex flex-col items-center justify-center gap-0.5 w-14 h-14 text-on-surface-variant hover:text-on-surface transition-all" data-path="home" href="#"><span class="material-symbols-outlined text-[24px]">casino</span><span class="font-label-sm text-label-sm">الرئيسية</span></a><a aria-current="page" class="flex flex-col items-center justify-center gap-0.5 w-14 h-14 transition-all text-primary-container font-headline-sm" data-path="lobby" href="#"><span class="material-symbols-outlined text-[24px]">playing_cards</span><span class="font-label-sm text-label-sm">الطاولات</span></a><a class="flex flex-col items-center justify-center gap-0.5 w-14 h-14 text-on-surface-variant hover:text-on-surface transition-all" data-path="leaderboard" href="#"><span class="material-symbols-outlined text-[24px]">leaderboard</span><span class="font-label-sm text-label-sm">المتصدرين</span></a><a class="flex flex-col items-center justify-center gap-0.5 w-14 h-14 text-on-surface-variant hover:text-on-surface transition-all" data-path="profile" href="#"><span class="material-symbols-outlined text-[24px]">account_circle</span><span class="font-label-sm text-label-sm">الملف</span></a></div></nav></body></html>

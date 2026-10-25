@@ -1,0 +1,248 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RoomStatus {
+  WAITING
+  IN_PROGRESS
+  FINISHED
+}
+
+enum MatchStatus {
+  ACTIVE
+  FINISHED
+  ABANDONED
+}
+
+enum LoanStatus {
+  OPEN
+  REPAID
+}
+
+model Player {
+  id          String              @id @default(cuid())
+  displayName String              @db.VarChar(40)
+  createdAt   DateTime            @default(now())
+  sessions    PlayerSession[]
+  memberships RoomMember[]
+  hostedRooms Room[]              @relation("RoomHost")
+  matches     MatchParticipant[]
+  transactions ChipTransaction[]
+  loans       LoanRecord[]
+  hints       PlayerHintRecord[]
+  guesses     PlayerGuessRecord[]
+}
+
+model PlayerSession {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique @db.Char(64)
+  playerId  String
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  revokedAt DateTime?
+  actions   GameAction[]
+
+  @@index([playerId, expiresAt])
+}
+
+model Room {
+  id           String       @id @default(cuid())
+  code         String       @unique @db.VarChar(12)
+  createRequestKey String   @unique @db.VarChar(36)
+  hostPlayerId String
+  host         Player       @relation("RoomHost", fields: [hostPlayerId], references: [id])
+  status       RoomStatus   @default(WAITING)
+  capacity     Int          @default(7)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  members      RoomMember[]
+  matches      GameMatch[]
+
+  @@index([status, createdAt])
+}
+
+model RoomMember {
+  roomId       String
+  playerId     String
+  room         Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  player       Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  isReady      Boolean   @default(false)
+  joinedAt     DateTime  @default(now())
+  disconnectedAt DateTime?
+  leftAt         DateTime?
+
+  @@id([roomId, playerId])
+  @@index([playerId])
+}
+
+model GameMatch {
+  id          String             @id @default(cuid())
+  roomId      String
+  room        Room               @relation(fields: [roomId], references: [id])
+  status      MatchStatus        @default(ACTIVE)
+  roundNumber Int                @default(0)
+  phase       String             @default("lobby") @db.VarChar(32)
+  pot         BigInt             @default(0)
+  questionIds String[]           @default([])
+  version     Int                @default(0)
+  startedAt   DateTime           @default(now())
+  finishedAt  DateTime?
+  participants MatchParticipant[]
+  rounds      GameRound[]
+  transactions ChipTransaction[]
+  loans       LoanRecord[]
+  actions     GameAction[]
+
+  @@index([roomId, status])
+}
+
+model MatchParticipant {
+  matchId       String
+  playerId      String
+  match         GameMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  player        Player    @relation(fields: [playerId], references: [id])
+  chips         BigInt    @default(500)
+  debt          BigInt    @default(0)
+  loanTaken     Boolean   @default(false)
+  goldenHintUsed Boolean  @default(false)
+  finalRank     Int?
+  netScore      BigInt?
+
+  @@id([matchId, playerId])
+  @@index([playerId, matchId])
+}
+
+model Question {
+  id         String      @id @default(cuid())
+  promptAr   String      @db.Text
+  answer     BigInt
+  category   String      @db.VarChar(80)
+  type       String      @db.VarChar(24)
+  difficulty String?     @db.VarChar(24)
+  locale     String      @default("ar") @db.VarChar(8)
+  source     String?     @db.VarChar(240)
+  sourceFile String?     @db.VarChar(240)
+  sourceRecordIndex Int?
+  metadata   Json?
+  enabled    Boolean     @default(false)
+  createdAt  DateTime    @default(now())
+  rounds     GameRound[]
+  hint       ApprovedQuestionHint?
+
+  @@index([sourceFile, sourceRecordIndex])
+}
+
+model ApprovedQuestionHint {
+  id       String   @id @default(cuid())
+  questionId String @unique
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  range    String   @db.VarChar(120)
+  accuracy String   @db.VarChar(120)
+  note     String   @db.VarChar(240)
+  approved Boolean  @default(false)
+  approvedAt DateTime?
+  source   String?  @db.VarChar(240)
+  createdAt DateTime @default(now())
+}
+
+model GameRound {
+  id              String              @id @default(cuid())
+  matchId         String
+  match           GameMatch           @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  number          Int
+  phase           String              @default("question-betting") @db.VarChar(32)
+  questionId      String
+  question        Question            @relation(fields: [questionId], references: [id])
+  pot             BigInt              @default(0)
+  currentBet      BigInt              @default(0)
+  actorPlayerId   String?
+  deadlineAt      DateTime?
+  rolloverPot     BigInt              @default(0)
+  engineState     Json?
+  revealedAt      DateTime?
+  hints           PlayerHintRecord[]
+  guesses         PlayerGuessRecord[]
+
+  @@unique([matchId, number])
+  @@index([phase, deadlineAt])
+}
+
+model PlayerHintRecord {
+  id         String    @id @default(cuid())
+  roundId    String
+  round      GameRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  playerId   String
+  player     Player    @relation(fields: [playerId], references: [id])
+  range      String    @db.VarChar(120)
+  accuracy   String    @db.VarChar(120)
+  note       String    @db.VarChar(240)
+  isGolden   Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+
+  @@unique([roundId, playerId])
+}
+
+model PlayerGuessRecord {
+  id          String    @id @default(cuid())
+  roundId     String
+  round       GameRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  playerId    String
+  player      Player    @relation(fields: [playerId], references: [id])
+  value       BigInt
+  lockedAt    DateTime  @default(now())
+  revealedAt  DateTime?
+
+  @@unique([roundId, playerId])
+}
+
+model ChipTransaction {
+  id             String    @id @default(cuid())
+  idempotencyKey String    @unique @db.VarChar(100)
+  playerId       String
+  player         Player    @relation(fields: [playerId], references: [id])
+  matchId        String
+  match          GameMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  amount         BigInt
+  kind           String    @db.VarChar(32)
+  roundNumber    Int?
+  createdAt      DateTime  @default(now())
+
+  @@index([playerId, matchId, createdAt])
+}
+
+model LoanRecord {
+  id             String     @id @default(cuid())
+  matchId        String
+  match          GameMatch  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  playerId       String
+  player         Player     @relation(fields: [playerId], references: [id])
+  amount         BigInt     @default(200)
+  remaining      BigInt     @default(200)
+  status         LoanStatus @default(OPEN)
+  borrowedAt     DateTime   @default(now())
+  repaidAt       DateTime?
+
+  @@unique([matchId, playerId])
+}
+
+model GameAction {
+  id             String        @id @default(cuid())
+  idempotencyKey String        @unique @db.VarChar(100)
+  matchId        String
+  match          GameMatch     @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  playerId       String
+  sessionId      String
+  session        PlayerSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  type           String        @db.VarChar(32)
+  payload        Json
+  response       Json?
+  createdAt      DateTime      @default(now())
+
+  @@index([matchId, playerId, createdAt])
+}
