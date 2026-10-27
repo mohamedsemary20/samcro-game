@@ -45,7 +45,7 @@ The server UI connects guest sessions, room creation/joining, readiness, match s
 
 ## Cloudflare Pages deployment
 
-Configure the existing `samcro-game` Pages Git project with project root `web`, build command `npm run build`, and build output directory `dist`. The tracked production Vite build setting is `VITE_API_BASE_URL=/api/v1`; leave `VITE_SOCKET_ORIGIN` unset so Socket.IO uses the Pages origin. The production Pages Functions binding `SAMKARO_BACKEND_ORIGIN` is configured in `wrangler.toml` as `https://curl-growing-giraffe.abasthan.app`.
+Configure the existing `samcro-game` Pages Git project with project root `web`, build command `npm ci && npm run build`, and build output directory `dist`. The production Vite setting is `VITE_API_BASE_URL=/api/v1`; leave `VITE_SOCKET_ORIGIN` unset so Socket.IO uses the Pages origin. The production Pages Functions binding `SAMKARO_BACKEND_ORIGIN` is configured in `wrangler.toml` as `https://curl-growing-giraffe.abasthan.app`.
 
 `functions/api/v1/[[path]].ts` and `functions/socket.io/[[path]].ts` proxy the two backend route trees. `public/_routes.json` is copied into the build output and limits Function invocations to those routes. The Pages project must deploy the `functions/` directory from this project root; deploying only the static `dist/` assets leaves the SPA fallback serving HTML for API and Socket.IO paths.
 
