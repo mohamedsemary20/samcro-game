@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Prisma } from '@prisma/client'
-import { isIntegrationQuestionFixtureMode, NoEligibleQuestionsError, PrismaQuestionRepository, toPublicQuestion, type GameQuestion } from '../src/questions/questionRepository.js'
+import { isIntegrationQuestionFixtureMode, NoEligibleQuestionsError, PrismaQuestionRepository, selectQuestionsForMatch, toPublicQuestion, type GameQuestion, type QuestionRepository } from '../src/questions/questionRepository.js'
 import { LOCAL_TEST_QUESTION_FLAG, LOCAL_TEST_QUESTION_SOURCE } from '../src/questions/localTestQuestionPool.js'
 
 describe('question repository eligibility', () => {
@@ -64,6 +64,38 @@ describe('question repository eligibility', () => {
   it('reports an unavailable pool when no active structurally valid rows exist', async () => {
     const transaction = { question: { findMany: async () => [] } } as unknown as Prisma.TransactionClient
     await expect(new PrismaQuestionRepository().selectUnused(transaction, [])).rejects.toBeInstanceOf(NoEligibleQuestionsError)
+  })
+
+  it('requires five distinct active questions for a match and rejects a pool of four', async () => {
+    const transaction = {} as Prisma.TransactionClient
+    const questions: GameQuestion[] = Array.from({ length: 4 }, (_, index) => ({
+      id: `active-${index + 1}`, promptAr: '\u0633\u0624\u0627\u0644\u061f', answer: BigInt(index + 1), category: 'test', type: 'number',
+      hint: { range: '1–2', accuracy: 'approximate', advisoryNote: 'اختبار' },
+    }))
+    const repository: QuestionRepository = {
+      getActiveById: async () => questions[0]!,
+      selectUnused: async (_transaction, usedIds) => {
+        const next = questions.find((question) => !usedIds.includes(question.id))
+        if (!next) throw new NoEligibleQuestionsError()
+        return next
+      },
+    }
+    await expect(selectQuestionsForMatch(transaction, repository)).rejects.toBeInstanceOf(NoEligibleQuestionsError)
+  })
+
+  it('selects five distinct active questions when the production pool meets the minimum', async () => {
+    const transaction = {} as Prisma.TransactionClient
+    const questions: GameQuestion[] = Array.from({ length: 5 }, (_, index) => ({
+      id: `active-${index + 1}`, promptAr: '\u0633\u0624\u0627\u0644\u061f', answer: BigInt(index + 1), category: 'test', type: 'number',
+      hint: { range: '1–2', accuracy: 'approximate', advisoryNote: 'اختبار' },
+    }))
+    const repository: QuestionRepository = {
+      getActiveById: async () => questions[0]!,
+      selectUnused: async (_transaction, usedIds) => questions.find((question) => !usedIds.includes(question.id))!,
+    }
+    const selected = await selectQuestionsForMatch(transaction, repository)
+    expect(selected).toHaveLength(5)
+    expect(new Set(selected.map((question) => question.id)).size).toBe(5)
   })
 
   it('keeps tagged test-pool rows behind the explicit local test switch', async () => {

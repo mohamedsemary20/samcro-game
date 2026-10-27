@@ -104,6 +104,8 @@ For the database-backed lifecycle and full-match test, use a disposable local Po
 
 Apply migrations and import questions only after verifying the database name and host. Production environment values belong in the backend hosting runtime: `NODE_ENV=production`, `COOKIE_SECURE=true`, `TRUSTED_ORIGINS=https://samcro-game.pages.dev`, `SOCKET_PUBLIC_ORIGIN=https://samcro-game.pages.dev`, and `DATABASE_URL` set as a secret for the intended production PostgreSQL database. Leave `SAMKARO_ENABLE_TEST_QUESTION_POOL` unset.
 
+For a production release, run `npm run build` followed by `npm run release:production` in `server/`. The release command requires `SAMKARO_PRODUCTION_DATABASE_HOST` (the exact URL host, including a non-default port if used) and `SAMKARO_PRODUCTION_DATABASE_NAME` in addition to `DATABASE_URL`. It refuses local/development/test targets and the test question pool, validates the source bank, checks the connected database name, applies pending migrations, runs the idempotent canonical question import, then confirms five distinct questions can be selected. The release command never loads `.env`; provide these values only through the production runtime or a protected release environment.
+
 The web deployment settings are documented in `../web/README.md`. Production question import and Pages deployment still require access to the intended production database and Cloudflare Pages project.
 
 ## Current limitations

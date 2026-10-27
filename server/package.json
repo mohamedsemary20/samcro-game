@@ -19,8 +19,9 @@
     "questions:import": "node --env-file-if-exists=.env --import ./scripts/osUserInfoCompat.mjs --import tsx scripts/questionBankCli.ts import",
     "questions:validate:built": "node --import ./scripts/osUserInfoCompat.mjs dist/server/scripts/questionBankCli.js validate",
     "questions:import:built": "node --env-file-if-exists=.env --import ./scripts/osUserInfoCompat.mjs dist/server/scripts/questionBankCli.js import",
+    "release:production": "node scripts/productionRelease.mjs",
     "questions:test-pool-import": "node --env-file=.env --import ./scripts/localTestQuestionPoolPreload.mjs --import tsx scripts/localTestQuestionPool.ts",
-    "test:integration": "node --env-file=.env --import ./scripts/enableRoomIntegration.mjs ./node_modules/vitest/vitest.mjs run test/integration/roomLifecycle.integration.test.ts --maxWorkers=1"
+    "test:integration": "node --env-file=.env scripts/prepareLocalIntegration.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.19.0",

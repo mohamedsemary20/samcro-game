@@ -2,7 +2,7 @@ import type { Prisma } from '@prisma/client'
 import type { GamePhase, LeaderboardEntry, PlayerHint, PrivatePlayerState, PublicGameState, RoundResult } from '../../../shared/contracts.js'
 import { prisma } from '../db/prisma.js'
 import { HttpError } from '../http/errors.js'
-import { NoEligibleQuestionsError, PrismaQuestionRepository, toPublicQuestion, type GameQuestion, type QuestionRepository } from '../questions/questionRepository.js'
+import { NoEligibleQuestionsError, PrismaQuestionRepository, selectQuestionsForMatch, toPublicQuestion, type GameQuestion, type QuestionRepository } from '../questions/questionRepository.js'
 import { applyEngineAction, createFundingRound, createRound, settleRound, type EngineAction, type EnginePlayer, type EngineRound } from './engine.js'
 import { calculateNetWorth, repayDebtAtMatchEnd, STARTING_CHIPS, takeEmergencyLoan } from './chipLedger.js'
 
@@ -40,11 +40,9 @@ export async function startAuthoritativeMatch(roomId: string, playerId: string, 
     }
     if (room.status !== 'WAITING') throw new HttpError(409, 'ROOM_NOT_WAITING', 'This room is not waiting for a match.')
     if (room.members.length < 3 || room.members.some((member) => !member.isReady)) throw new HttpError(409, 'PLAYERS_NOT_READY', 'At least three players must be ready.')
-    const selectedQuestions: GameQuestion[] = []
+    let selectedQuestions: GameQuestion[]
     try {
-      for (let round = 0; round < 5; round += 1) {
-        selectedQuestions.push(await (questionRepository ?? questions).selectUnused(tx, selectedQuestions.map((question) => question.id)))
-      }
+      selectedQuestions = await selectQuestionsForMatch(tx, questionRepository ?? questions)
     } catch (error) {
       if (error instanceof NoEligibleQuestionsError) throw new HttpError(503, 'QUESTION_BANK_INCOMPLETE', 'Five active questions with safe numeric answers are required to start a match.')
       throw error

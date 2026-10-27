@@ -67,6 +67,16 @@ export class NoEligibleQuestionsError extends Error {
   constructor() { super('No eligible question is available for this round.'); this.name = 'NoEligibleQuestionsError' }
 }
 
+export const QUESTIONS_PER_MATCH = 5
+
+export async function selectQuestionsForMatch(transaction: Prisma.TransactionClient, repository: QuestionRepository): Promise<GameQuestion[]> {
+  const selected: GameQuestion[] = []
+  for (let round = 0; round < QUESTIONS_PER_MATCH; round += 1) {
+    selected.push(await repository.selectUnused(transaction, selected.map((question) => question.id)))
+  }
+  return selected
+}
+
 export class PrismaQuestionRepository implements QuestionRepository {
   private readonly integrationFixturesEnabled: boolean
   private readonly localTestPoolEnabled: boolean
