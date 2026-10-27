@@ -13,7 +13,7 @@ import type {
 export interface GameApiClient {
   getCurrentPlayer(signal?: AbortSignal): Promise<{ id: string; name: string }>
   createGuestSession(displayName: string): Promise<GuestSessionResponse['player']>
-  createRoom(capacity?: number): Promise<Room>
+  createRoom(capacity?: number, idempotencyKey?: string): Promise<Room>
   joinRoom(code: string): Promise<Room>
   getRoom(roomId: string, signal?: AbortSignal): Promise<RoomDetails>
   getPublicGameState(roomId: string, signal?: AbortSignal): Promise<PublicGameState>
@@ -24,7 +24,7 @@ export interface GameApiClient {
 }
 
 export interface GameRealtimeConnection {
-  connect(roomId: string): Promise<void>
+  connect(roomId: string): Promise<Room>
   onRoomState(listener: (room: Room) => void): () => void
   onPublicGameState(listener: (state: PublicGameState) => void): () => void
   onPrivatePlayerState(listener: (state: PrivatePlayerState) => void): () => void

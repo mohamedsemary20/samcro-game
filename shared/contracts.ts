@@ -31,6 +31,10 @@ export interface Room {
   status: RoomStatus
   capacity?: number
   readyPlayerIds?: string[]
+  /** Connected members for realtime lobby state, avoiding repeated REST reads. */
+  connectedPlayerIds?: string[]
+  /** Active roster included in room events so every state update needs no REST fan-out. */
+  members?: RoomMemberState[]
 }
 
 export interface RoomMemberState {
@@ -160,7 +164,7 @@ export interface ApiError {
   requestId?: string
 }
 
-export type ActionAcknowledgement = { ok: true } | { ok: false; error: ApiError }
+export type ActionAcknowledgement = { ok: true; requestId: string } | { ok: false; error: ApiError }
 
 export interface RoomReadyPayload { ready: boolean }
 export interface GuessSubmitPayload { value: number; idempotencyKey: string }

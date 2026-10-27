@@ -33,9 +33,9 @@ export class HttpGameApiClient implements GameApiClient {
     return result.player
   }
 
-  async createRoom(capacity = 7): Promise<Room> {
+  async createRoom(capacity = 7, idempotencyKey: string = crypto.randomUUID()): Promise<Room> {
     const result = await this.request<{ room: Room }>('/rooms', {
-      method: 'POST', body: JSON.stringify({ capacity, idempotencyKey: crypto.randomUUID() }),
+      method: 'POST', body: JSON.stringify({ capacity, idempotencyKey }),
     })
     return result.room
   }

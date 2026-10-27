@@ -18,7 +18,6 @@ interface RoomDto {
 }
 
 interface ApiFailure { error: { code: string; message: string } }
-interface SocketError { code: string; message: string }
 interface SocketEventWaiter {
   event: string
   accepts: (payload: unknown) => boolean
@@ -77,6 +76,8 @@ class SocketIoTestClient {
   }
 
   isConnected(): boolean { return this.connected && this.socket.readyState === WebSocket.OPEN }
+
+  drain(event: string): unknown[] { return this.events.get(event)?.splice(0) ?? [] }
 
   waitFor<T>(event: string, accepts: (payload: T) => boolean = () => true, timeoutMs = 10_000): Promise<T> {
     const queued = this.events.get(event) ?? []
@@ -168,7 +169,7 @@ suite('PostgreSQL-backed REST and Socket.IO room lifecycle', () => {
     expect(process.env.SAMKARO_RUN_DB_INTEGRATION).toBe('1')
     expect(process.env.SAMKARO_ENABLE_TEST_QUESTION_POOL).toBeUndefined()
 
-    const [{ app }, { prisma }, { attachSocketServer }, questionRepositoryModule] = await Promise.all([
+    const [{ app }, { prisma }, { attachSocketServer, processExpiredTurns }, questionRepositoryModule] = await Promise.all([
       import('../../src/http/app.js'),
       import('../../src/db/prisma.js'),
       import('../../src/realtime/socketServer.js'),
@@ -213,10 +214,18 @@ suite('PostgreSQL-backed REST and Socket.IO room lifecycle', () => {
           rejectFirstStartForQuestionBank = false
           throw new NoEligibleQuestionsError()
         }
+        // Five deliberately slow selections prove match-start preparation is
+        // outside Prisma's default five-second interactive transaction.
+        await delay(1_050)
         return questionRepository.selectUnused(transaction, usedQuestionIds)
       },
       getActiveById: (transaction, questionId) => questionRepository.getActiveById(transaction, questionId),
-      getHintForPlayer: (transaction, questionId, playerId, roundPlayerIds) => questionRepository.getHintForPlayer(transaction, questionId, playerId, roundPlayerIds),
+      getHintForPlayer: async (transaction, questionId, playerId, roundPlayerIds) => {
+        // The secret-clue timeout repairs three missing hints. Keep this work
+        // intentionally slower than the default transaction timeout.
+        await delay(1_750)
+        return questionRepository.getHintForPlayer(transaction, questionId, playerId, roundPlayerIds)
+      },
     }
     const io: SocketServer = attachSocketServer(httpServer, { questionRepository: retryQuestionRepository })
     const clients: SocketIoTestClient[] = []
@@ -274,12 +283,17 @@ suite('PostgreSQL-backed REST and Socket.IO room lifecycle', () => {
       expect(createResponse.status).toBe(201)
       const created = await createResponse.json() as { room: RoomDto }
       roomId = created.room.id
+      const repeatedCreate = await request('/rooms', { method: 'POST', cookie: host.cookie, body: { capacity: 3, idempotencyKey: hostKey } })
+      expect(repeatedCreate.status).toBe(201)
+      expect((await repeatedCreate.json() as { room: RoomDto }).room.id).toBe(roomId)
       expect(created.room.status).toBe('waiting')
       expect(created.room.readyPlayerIds).toEqual([host.playerId])
 
       for (const identity of identities.slice(1)) {
         const joined = await request('/rooms/join', { method: 'POST', cookie: identity.cookie, body: { code: created.room.code } })
         expect(joined.status).toBe(200)
+        const repeatedJoin = await request('/rooms/join', { method: 'POST', cookie: identity.cookie, body: { code: created.room.code } })
+        expect(repeatedJoin.status).toBe(200)
       }
 
       const unauthenticatedRoomRead = await request(`/rooms/${roomId}`)
@@ -300,19 +314,16 @@ suite('PostgreSQL-backed REST and Socket.IO room lifecycle', () => {
         data: { leftAt: new Date() },
       })
       expect(await db.roomMember.count({ where: { roomId, leftAt: null } })).toBe(2)
-      const tooFewPlayersError = clients[0]!.waitFor<SocketError>('server:error', (error) => error.code === 'PLAYERS_NOT_READY')
       const tooFewPlayersAck = clients[0]!.emitWithAck('match:start', { idempotencyKey: randomUUID() })
       expect(await tooFewPlayersAck).toMatchObject({ ok: false, error: { code: 'PLAYERS_NOT_READY' } })
-      await tooFewPlayersError
       await db.roomMember.update({
         where: { roomId_playerId: { roomId, playerId: temporarilyInactivePlayer.playerId } },
         data: { leftAt: null },
       })
 
-      const notReadyError = clients[0]!.waitFor<SocketError>('server:error', (error) => error.code === 'PLAYERS_NOT_READY')
       const notReadyAck = clients[0]!.emitWithAck('match:start', { idempotencyKey: randomUUID() })
       expect(await notReadyAck).toMatchObject({ ok: false, error: { code: 'PLAYERS_NOT_READY' } })
-      await notReadyError
+      expect(clients[0]!.drain('server:error')).toHaveLength(0)
       expect(await db.gameMatch.count({ where: { roomId } })).toBe(0)
 
       for (const identity of identities.slice(1)) {
@@ -332,10 +343,8 @@ suite('PostgreSQL-backed REST and Socket.IO room lifecycle', () => {
       expect(roomState.room.status).toBe('waiting')
 
       const nonHost = clients[1]!
-      const hostOnlyError = nonHost.waitFor<SocketError>('server:error', (error) => error.code === 'HOST_REQUIRED')
       const nonHostAck = nonHost.emitWithAck('match:start', { idempotencyKey: randomUUID() })
       expect(await nonHostAck).toMatchObject({ ok: false, error: { code: 'HOST_REQUIRED' } })
-      await hostOnlyError
       expect(await db.gameMatch.count({ where: { roomId } })).toBe(0)
 
       const startingPublicStates = clients.map((client) => client.waitForNext<PublicGameState>(
@@ -346,20 +355,18 @@ suite('PostgreSQL-backed REST and Socket.IO room lifecycle', () => {
         'player:private', (state) => state.playerId === identities[index]!.playerId,
       ))
       // Subscribe before the first action so completion cannot race the test observer.
-      const completionEvent = clients[1]!.waitFor<Array<{ playerId: string; rank: number }>>('game:complete')
+      const completionEvent = clients[1]!.waitFor<Array<{ playerId: string; rank: number }>>('game:complete', () => true, 60_000)
       const revealEvents = Array.from({ length: 5 }, (_, index) =>
-        clients[1]!.waitFor<RoundResult>('game:reveal', (result) => result.roundNumber === index + 1),
+        clients[1]!.waitFor<RoundResult>('game:reveal', (result) => result.roundNumber === index + 1, 60_000),
       )
-      const unavailableError = clients[0]!.waitFor<SocketError>('server:error', (error) => error.code === 'QUESTION_BANK_INCOMPLETE')
       const unavailableAck = clients[0]!.emitWithAck('match:start', { idempotencyKey: randomUUID() })
       expect(await unavailableAck).toMatchObject({ ok: false, error: { code: 'QUESTION_BANK_INCOMPLETE' } })
-      await unavailableError
       expect((await request(`/rooms/${roomId}`, { cookie: host.cookie }).then((response) => response.json()) as { room: RoomDto }).room.status).toBe('waiting')
       expect(await db.gameMatch.count({ where: { roomId } })).toBe(0)
 
       const startKey = randomUUID()
       const startAck = clients[0]!.emitWithAck('match:start', { idempotencyKey: startKey })
-      expect(await startAck).toEqual({ ok: true })
+      expect(await startAck).toMatchObject({ ok: true, requestId: expect.any(String) })
       const initialStates = await Promise.all(startingPublicStates)
       let game = initialStates[0]!
       expect(initialStates.every((state) => state.session.questionId === game.session.questionId)).toBe(true)
@@ -368,7 +375,7 @@ suite('PostgreSQL-backed REST and Socket.IO room lifecycle', () => {
       expect(startedRooms.every((state) => state.status === 'in-progress')).toBe(true)
       expect(await db.gameMatch.count({ where: { roomId, status: 'ACTIVE' } })).toBe(1)
       expect(await db.gameRound.count({ where: { match: { roomId }, number: 1 } })).toBe(1)
-      expect(await clients[0]!.emitWithAck('match:start', { idempotencyKey: startKey })).toEqual({ ok: true })
+      expect(await clients[0]!.emitWithAck('match:start', { idempotencyKey: startKey })).toMatchObject({ ok: true, requestId: expect.any(String) })
       expect(await db.gameMatch.count({ where: { roomId, status: 'ACTIVE' } })).toBe(1)
       const personalFunding = await Promise.all(startingPrivateStates)
       expect(game.players).toHaveLength(3)
@@ -407,9 +414,11 @@ suite('PostgreSQL-backed REST and Socket.IO room lifecycle', () => {
                   'player:private', (state) => state.playerId === identities[viewerIndex]!.playerId,
                 ))
                 await db.gameRound.update({ where: { id: currentRound!.id }, data: { deadlineAt: new Date(expiredAt), engineState: expiredEngine as Prisma.InputJsonValue } })
+                await Promise.all([processExpiredTurns(io), processExpiredTurns(io)])
                 const [timedStates, privateStates] = await Promise.all([Promise.all(publicUpdates), Promise.all(privateUpdates)])
                 const nextState = timedStates[0]!
                 expect(nextState.session.phase).toBe('guess-input')
+                expect(await db.gameAction.count({ where: { idempotencyKey: `timeout:${currentRound!.id}:${expiredAt}` } })).toBe(1)
                 expect(nextState.roundProgress.every((entry) => entry.hasHint)).toBe(true)
                 for (const [viewerIndex, state] of privateStates.entries()) {
                   expect(state.playerId).toBe(identities[viewerIndex]!.playerId)
@@ -454,7 +463,7 @@ suite('PostgreSQL-backed REST and Socket.IO room lifecycle', () => {
               ))
               const hintAcknowledgement = client.emitWithAck('game:hint.request', { idempotencyKey: randomUUID() })
               const [nextState, ...privateStates] = await Promise.all([updated, ...privateUpdates])
-              expect(await hintAcknowledgement).toEqual({ ok: true })
+              expect(await hintAcknowledgement).toMatchObject({ ok: true, requestId: expect.any(String) })
               if (nextState.session.roundNumber === 1) {
                 for (const [viewerIndex, state] of privateStates.entries()) {
                   expect(state.playerId).toBe(identities[viewerIndex]!.playerId)
@@ -499,7 +508,7 @@ suite('PostgreSQL-backed REST and Socket.IO room lifecycle', () => {
               const updated = client.waitFor<PublicGameState>('game:state', (state) => (state.session.version ?? 0) > latestVersion)
               const acknowledgement = client.emitWithAck('game:guess.submit', { idempotencyKey: randomUUID(), value: 42 })
               game = await updated
-              expect(await acknowledgement).toEqual({ ok: true })
+              expect(await acknowledgement).toMatchObject({ ok: true, requestId: expect.any(String) })
               const progress = game.roundProgress.find((entry) => entry.playerId === identity.playerId)
               expect(progress?.hasGuess).toBe(true)
               expect(progress).not.toHaveProperty('guess')
@@ -524,7 +533,7 @@ suite('PostgreSQL-backed REST and Socket.IO room lifecycle', () => {
           const updated = actor.waitFor<PublicGameState>('game:state', (state) => (state.session.version ?? 0) > latestVersion)
           const betAcknowledgement = actor.emitWithAck('game:bet.submit', { idempotencyKey: randomUUID(), action: { type: 'check' } })
           game = await updated
-          expect(await betAcknowledgement).toEqual({ ok: true })
+          expect(await betAcknowledgement).toMatchObject({ ok: true, requestId: expect.any(String) })
           observedRounds.add(game.session.roundNumber)
           latestVersion = game.session.version ?? latestVersion
           actionCount += 1

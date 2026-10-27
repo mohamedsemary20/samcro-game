@@ -2,6 +2,23 @@ export function isSocketTransportFailure(code: string): boolean {
   return code === 'SOCKET_CONNECTION' || code === 'SOCKET_DISCONNECTED' || code === 'SESSION_EXPIRED'
 }
 
+export function isUncertainActionOutcome(code: string): boolean {
+  return code === 'ACK_TIMEOUT' || code === 'SOCKET_DISCONNECTED'
+}
+
+export class RetryableActionKey {
+  private pending: { fingerprint: string; key: string } | null = null
+
+  constructor(private readonly createKey: () => string = () => crypto.randomUUID()) {}
+
+  forFingerprint(fingerprint: string): string {
+    if (this.pending?.fingerprint !== fingerprint) this.pending = { fingerprint, key: this.createKey() }
+    return this.pending.key
+  }
+
+  clear(): void { this.pending = null }
+}
+
 export function isDefinitiveRoomRestoreFailure(error: { code: string; status: number }): boolean {
   return (error.code === 'ROOM_NOT_FOUND' && error.status === 404)
     || (error.code === 'ROOM_MEMBERSHIP_REQUIRED' && error.status === 403)

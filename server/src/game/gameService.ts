@@ -1,6 +1,7 @@
 import type { Prisma } from '@prisma/client'
 import type { GamePhase, LeaderboardEntry, PlayerHint, PrivatePlayerState, PublicGameState, RoundResult } from '../../../shared/contracts.js'
 import { prisma } from '../db/prisma.js'
+import { retryDatabaseTransaction } from '../db/retryTransaction.js'
 import { HttpError } from '../http/errors.js'
 import { NoEligibleQuestionsError, PrismaQuestionRepository, selectQuestionsForMatch, toPublicQuestion, type GameQuestion, type QuestionRepository } from '../questions/questionRepository.js'
 import { applyEngineAction, createFundingRound, createRound, settleRound, type EngineAction, type EnginePlayer, type EngineRound } from './engine.js'
@@ -25,7 +26,28 @@ function loanUnavailableReason(state: EngineRound, player: EnginePlayer): Privat
 }
 
 export async function startAuthoritativeMatch(roomId: string, playerId: string, sessionId: string, idempotencyKey: string, questionRepository?: QuestionRepository) {
-  return prisma.$transaction(async (tx) => {
+  const repository = questionRepository ?? questions
+  const priorAction = await prisma.gameAction.findUnique({ where: { idempotencyKey }, include: { match: { select: { roomId: true, status: true } } } })
+  if (priorAction) {
+    if (priorAction.playerId !== playerId || priorAction.type !== 'MATCH_START' || priorAction.match.roomId !== roomId) throw new HttpError(409, 'IDEMPOTENCY_KEY_REUSED', 'Request key has already been used.')
+    if (priorAction.match.status !== 'ACTIVE') throw new HttpError(409, 'ROOM_NOT_WAITING', 'This room is not waiting for a match.')
+    const round = await prisma.gameRound.findFirst({ where: { matchId: priorAction.matchId }, orderBy: { number: 'desc' } })
+    if (!round) throw new HttpError(500, 'GAME_STATE_MISSING', 'The current game state is unavailable.')
+    return { matchId: priorAction.matchId, roundId: round.id, roomId, round: parseState(round.engineState) }
+  }
+  const initialRoom = await prisma.room.findUnique({ where: { id: roomId }, include: { members: { where: { leftAt: null }, orderBy: { playerId: 'asc' } } } })
+  if (!initialRoom || !initialRoom.members.some((member) => member.playerId === playerId)) throw new HttpError(403, 'ROOM_MEMBERSHIP_REQUIRED', 'You are not an active member of this room.')
+  if (initialRoom.hostPlayerId !== playerId) throw new HttpError(403, 'HOST_REQUIRED', 'Only the host can start a match.')
+  if (initialRoom.status !== 'WAITING') throw new HttpError(409, 'ROOM_NOT_WAITING', 'This room is not waiting for a match.')
+  if (initialRoom.members.length < 3 || initialRoom.members.some((member) => !member.isReady)) throw new HttpError(409, 'PLAYERS_NOT_READY', 'At least three players must be ready.')
+  let selectedQuestions: GameQuestion[]
+  try {
+    selectedQuestions = await selectQuestionsForMatch(prisma, repository)
+  } catch (error) {
+    if (error instanceof NoEligibleQuestionsError) throw new HttpError(503, 'QUESTION_BANK_INCOMPLETE', 'Five active questions with safe numeric answers are required to start a match.')
+    throw error
+  }
+  return retryDatabaseTransaction(() => prisma.$transaction(async (tx) => {
     const room = await tx.room.findUnique({ where: { id: roomId }, include: { members: { where: { leftAt: null }, orderBy: { playerId: 'asc' } } } })
     if (!room || !room.members.some((member) => member.playerId === playerId)) throw new HttpError(403, 'ROOM_MEMBERSHIP_REQUIRED', 'You are not an active member of this room.')
     if (room.hostPlayerId !== playerId) throw new HttpError(403, 'HOST_REQUIRED', 'Only the host can start a match.')
@@ -40,17 +62,13 @@ export async function startAuthoritativeMatch(roomId: string, playerId: string, 
     }
     if (room.status !== 'WAITING') throw new HttpError(409, 'ROOM_NOT_WAITING', 'This room is not waiting for a match.')
     if (room.members.length < 3 || room.members.some((member) => !member.isReady)) throw new HttpError(409, 'PLAYERS_NOT_READY', 'At least three players must be ready.')
-    let selectedQuestions: GameQuestion[]
-    try {
-      selectedQuestions = await selectQuestionsForMatch(tx, questionRepository ?? questions)
-    } catch (error) {
-      if (error instanceof NoEligibleQuestionsError) throw new HttpError(503, 'QUESTION_BANK_INCOMPLETE', 'Five active questions with safe numeric answers are required to start a match.')
-      throw error
-    }
     const participants = room.members.map((member) => ({ id: member.playerId, chips: STARTING_CHIPS, debt: 0, loanTaken: false, folded: false, connected: member.disconnectedAt === null, streetContribution: 0, roundContribution: 0 }))
-    const match = await tx.gameMatch.create({ data: { roomId, roundNumber: 1, phase: 'question-betting', questionIds: selectedQuestions.map((question) => question.id), participants: { create: participants.map((participant) => ({ playerId: participant.id, chips: BigInt(participant.chips) })) } } })
     const question = selectedQuestions[0]!
     const roundState = createRound(1, toPublicQuestion(question, 1), participants, 0, Date.now())
+    const match = await tx.gameMatch.create({ data: {
+      roomId, roundNumber: 1, phase: roundState.phase, questionIds: selectedQuestions.map((question) => question.id),
+      participants: { create: roundState.players.map((participant) => ({ playerId: participant.id, chips: BigInt(participant.chips) })) },
+    } })
     const round = await tx.gameRound.create({ data: {
       matchId: match.id, number: 1, phase: roundState.phase, questionId: question.id,
       pot: BigInt(roundState.pot), currentBet: BigInt(roundState.currentBet), actorPlayerId: roundState.actorId,
@@ -59,7 +77,6 @@ export async function startAuthoritativeMatch(roomId: string, playerId: string, 
     for (const participant of roundState.players) {
       const original = participants.find((candidate) => candidate.id === participant.id)!
       if (original.chips !== participant.chips) {
-        await tx.matchParticipant.update({ where: { matchId_playerId: { matchId: match.id, playerId: participant.id } }, data: { chips: BigInt(participant.chips) } })
         await tx.chipTransaction.create({ data: {
           playerId: participant.id, matchId: match.id, amount: -50n, kind: 'ANTE', roundNumber: 1,
           idempotencyKey: `${match.id}:round:1:ante:${participant.id}`,
@@ -70,7 +87,7 @@ export async function startAuthoritativeMatch(roomId: string, playerId: string, 
     await tx.gameMatch.update({ where: { id: match.id }, data: { pot: BigInt(roundState.pot) } })
     await tx.gameAction.create({ data: { matchId: match.id, playerId, sessionId, idempotencyKey, type: 'MATCH_START', payload: { roomId } } })
     return { matchId: match.id, roundId: round.id, roomId, round: roundState }
-  }, { isolationLevel: 'Serializable' })
+  }, { isolationLevel: 'Serializable' }))
 }
 
 export interface AppliedGameAction {
@@ -134,8 +151,49 @@ export async function applyAuthoritativeAction(input: {
   roomId: string; playerId: string; sessionId: string; idempotencyKey: string;
   action: EngineAction | { type: 'hint-request'; playerId: string; now: number }
   questionRepository?: QuestionRepository
+  expectedRoundId?: string
+  expectedDeadlineAtMs?: number
 }): Promise<AppliedGameAction> {
-  return prisma.$transaction(async (tx) => {
+  const repository = input.questionRepository ?? questions
+  let preparedHint: PlayerHint | undefined
+  let preparedTimeoutHints: Record<string, PlayerHint> | undefined
+  if (input.action.type === 'hint-request' || input.action.type === 'timeout' && input.expectedRoundId) {
+    const matchSnapshot = await prisma.gameMatch.findFirst({ where: { roomId: input.roomId, status: 'ACTIVE' }, orderBy: { startedAt: 'desc' } })
+    const roundSnapshot = matchSnapshot
+      ? await prisma.gameRound.findFirst({ where: { matchId: matchSnapshot.id, number: matchSnapshot.roundNumber } })
+      : null
+    if (!matchSnapshot || !roundSnapshot || input.expectedRoundId && roundSnapshot.id !== input.expectedRoundId
+      || input.expectedDeadlineAtMs !== undefined && roundSnapshot.deadlineAt?.getTime() !== input.expectedDeadlineAtMs) {
+      throw new HttpError(409, 'ACTION_ALREADY_APPLIED', 'The round has already advanced; refresh the game state.')
+    }
+    const snapshotState = parseState(roundSnapshot.engineState)
+    if (input.action.type === 'hint-request' && !snapshotState.hints[input.action.playerId]) {
+      try {
+        const question = repository.getHintForPlayer
+          ? await repository.getHintForPlayer(prisma, roundSnapshot.questionId, input.action.playerId, snapshotState.players.map((player) => player.id))
+          : await repository.getActiveById(prisma, roundSnapshot.questionId)
+        preparedHint = { questionId: roundSnapshot.questionId, ...question.hint }
+      } catch (error) {
+        if (error instanceof NoEligibleQuestionsError) throw new HttpError(503, 'QUESTION_HINT_UNAVAILABLE', 'This question has no available hint.')
+        throw error
+      }
+    }
+    if (input.action.type === 'timeout' && snapshotState.phase === 'secret-clue') {
+      preparedTimeoutHints = {}
+      for (const player of snapshotState.players.filter((entry) => !entry.folded && entry.chips >= 0 && !snapshotState.hints[entry.id])) {
+        try {
+          const question = repository.getHintForPlayer
+            ? await repository.getHintForPlayer(prisma, roundSnapshot.questionId, player.id, snapshotState.players.map((entry) => entry.id))
+            : await repository.getActiveById(prisma, roundSnapshot.questionId)
+          preparedTimeoutHints[player.id] = { questionId: roundSnapshot.questionId, ...question.hint }
+        } catch (error) {
+          if (error instanceof NoEligibleQuestionsError) throw new HttpError(503, 'QUESTION_HINT_UNAVAILABLE', 'This question has no available hint.')
+          throw error
+        }
+      }
+    }
+  }
+  return retryDatabaseTransaction(() => prisma.$transaction(async (tx) => {
     const match = await tx.gameMatch.findFirst({ where: { roomId: input.roomId, status: 'ACTIVE' }, orderBy: { startedAt: 'desc' } })
     if (!match) throw new HttpError(409, 'NO_ACTIVE_MATCH', 'There is no active match for this room.')
     const member = await tx.matchParticipant.findUnique({ where: { matchId_playerId: { matchId: match.id, playerId: input.playerId } } })
@@ -147,6 +205,8 @@ export async function applyAuthoritativeAction(input: {
     }
     const current = await tx.gameRound.findFirst({ where: { matchId: match.id, number: match.roundNumber }, include: { question: { include: { hint: true } } } })
     if (!current) throw new HttpError(500, 'ROUND_STATE_MISSING', 'The current round is unavailable.')
+    if (input.expectedRoundId && current.id !== input.expectedRoundId) throw new HttpError(409, 'ACTION_ALREADY_APPLIED', 'The round has already advanced; refresh the game state.')
+    if (input.expectedDeadlineAtMs !== undefined && current.deadlineAt?.getTime() !== input.expectedDeadlineAtMs) throw new HttpError(409, 'ACTION_ALREADY_APPLIED', 'The turn deadline has changed; refresh the game state.')
     const state = parseState(current.engineState)
     let action: EngineAction
     const repository = input.questionRepository ?? questions
@@ -157,35 +217,14 @@ export async function applyAuthoritativeAction(input: {
       if (existingHint) {
         action = { type: 'hint', playerId: input.playerId, hint: existingHint, now: input.action.now }
       } else {
-        let availableQuestion: GameQuestion
-        try {
-          availableQuestion = repository.getHintForPlayer
-            ? await repository.getHintForPlayer(tx, current.questionId, input.playerId, state.players.map((player) => player.id))
-            : await repository.getActiveById(tx, current.questionId)
-        }
-        catch (error) {
-          if (error instanceof NoEligibleQuestionsError) throw new HttpError(503, 'QUESTION_HINT_UNAVAILABLE', 'This question has no available hint.')
-          throw error
-        }
-        const hint: PlayerHint = { questionId: current.questionId, ...availableQuestion.hint }
-        action = { type: 'hint', playerId: input.playerId, hint, now: input.action.now }
+        if (!preparedHint) throw new HttpError(409, 'ACTION_ALREADY_APPLIED', 'The round has changed; refresh the game state.')
+        action = { type: 'hint', playerId: input.playerId, hint: preparedHint, now: input.action.now }
       }
     } else if (input.action.type === 'timeout' && state.phase === 'secret-clue') {
       // Missing private hint requests are repaired server-side at the deadline;
       // a room-wide timer can no longer move any eligible player past a hint.
-      const hints: Record<string, PlayerHint> = {}
-      for (const player of state.players.filter((entry) => !entry.folded && entry.chips >= 0 && !state.hints[entry.id])) {
-        try {
-          const question = repository.getHintForPlayer
-            ? await repository.getHintForPlayer(tx, current.questionId, player.id, state.players.map((entry) => entry.id))
-            : await repository.getActiveById(tx, current.questionId)
-          hints[player.id] = { questionId: current.questionId, ...question.hint }
-        } catch (error) {
-          if (error instanceof NoEligibleQuestionsError) throw new HttpError(503, 'QUESTION_HINT_UNAVAILABLE', 'This question has no available hint.')
-          throw error
-        }
-      }
-      action = { type: 'hint-timeout', hints, now: input.action.now }
+      if (!preparedTimeoutHints) throw new HttpError(409, 'ACTION_ALREADY_APPLIED', 'The round has changed; refresh the game state.')
+      action = { type: 'hint-timeout', hints: preparedTimeoutHints, now: input.action.now }
     } else action = input.action
     let next: EngineRound
     try { next = applyEngineAction(state, action) }
@@ -193,11 +232,19 @@ export async function applyAuthoritativeAction(input: {
       const code = error instanceof Error ? error.message : 'INVALID_ACTION'
       throw new HttpError(409, code, 'The action is not valid in the current game state.')
     }
-    await tx.gameRound.update({ where: { id: current.id }, data: {
+    const roundClaim = await tx.gameRound.updateMany({
+      where: { id: current.id, deadlineAt: current.deadlineAt, phase: current.phase },
+      data: {
       phase: next.phase, pot: BigInt(next.pot), currentBet: BigInt(next.currentBet), actorPlayerId: next.actorId,
       deadlineAt: next.deadline === null ? null : new Date(next.deadline), engineState: asJson(next),
-    } })
-    await tx.gameMatch.update({ where: { id: match.id }, data: { phase: next.phase, roundNumber: next.number, pot: BigInt(next.pot), version: { increment: 1 } } })
+      },
+    })
+    if (roundClaim.count !== 1) throw new HttpError(409, 'ACTION_ALREADY_APPLIED', 'The round has already changed; refresh the game state.')
+    const matchClaim = await tx.gameMatch.updateMany({
+      where: { id: match.id, version: match.version, status: 'ACTIVE' },
+      data: { phase: next.phase, roundNumber: next.number, pot: BigInt(next.pot), version: { increment: 1 } },
+    })
+    if (matchClaim.count !== 1) throw new HttpError(409, 'ACTION_ALREADY_APPLIED', 'The match has already changed; refresh the game state.')
     for (const player of next.players) {
       const previous = state.players.find((entry) => entry.id === player.id)!
       if (player.chips !== previous.chips) {
@@ -285,11 +332,11 @@ export async function applyAuthoritativeAction(input: {
       ...(loanUnavailableReason(visibleState, player) ? { loanUnavailableReason: loanUnavailableReason(visibleState, player)! } : {}),
     }))
     return { publicState, privateStates, ...(reveal ? { reveal } : {}), ...(completion ? { completion } : {}) }
-  }, { isolationLevel: 'Serializable' })
+  }, { isolationLevel: 'Serializable' }))
 }
 
 export async function requestEmergencyLoan(input: { roomId: string; playerId: string; sessionId: string; idempotencyKey: string }): Promise<AppliedGameAction> {
-  return prisma.$transaction(async (tx) => {
+  return retryDatabaseTransaction(() => prisma.$transaction(async (tx) => {
     const match = await tx.gameMatch.findFirst({ where: { roomId: input.roomId, status: 'ACTIVE' }, orderBy: { startedAt: 'desc' } })
     if (!match) throw new HttpError(409, 'NO_ACTIVE_MATCH', 'There is no active match for this room.')
     const participant = await tx.matchParticipant.findUnique({ where: { matchId_playerId: { matchId: match.id, playerId: input.playerId } } })
@@ -323,7 +370,7 @@ export async function requestEmergencyLoan(input: { roomId: string; playerId: st
       availableChips: entry.chips, roundContribution: entry.roundContribution, debt: entry.debt, loanAvailable: state.phase === 'round-funding' && entry.chips < 50 && !entry.loanTaken,
       ...(loanUnavailableReason(state, entry) ? { loanUnavailableReason: loanUnavailableReason(state, entry)! } : {}),
     })) }
-  }, { isolationLevel: 'Serializable' })
+  }, { isolationLevel: 'Serializable' }))
 }
 
 async function buildPublicState(tx: Prisma.TransactionClient, roomId: string, matchId: string, previousState: EngineRound): Promise<PublicGameState> {

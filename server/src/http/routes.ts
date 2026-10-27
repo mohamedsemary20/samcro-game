@@ -6,7 +6,7 @@ import { createRoomSchema, guestSessionSchema, joinRoomSchema, roomIdSchema } fr
 import { asyncRoute } from './asyncRoute.js'
 import { HttpError } from './errors.js'
 import { clearSessionCookie, createGuestSession, requireSession, revokeSession, setSessionCookie } from '../auth/session.js'
-import { createRoom, getRoomForPlayer, joinRoom } from '../rooms/roomService.js'
+import { createRoom, getRoomDetailsForPlayer, getRoomForPlayer, joinRoom } from '../rooms/roomService.js'
 import { getPrivatePlayerState, getPublicGameState } from '../game/gameService.js'
 import { disconnectSession } from '../realtime/socketServer.js'
 
@@ -53,21 +53,7 @@ apiRouter.post('/rooms/join', requireSession, roomCodeLimiter, asyncRoute(async 
 
 apiRouter.get('/rooms/:roomId', requireSession, asyncRoute(async (request, response) => {
   const roomId = roomIdSchema.parse({ roomId: request.params.roomId }).roomId
-  const room = await getRoomForPlayer(roomId, request.auth!.playerId)
-  const members = await prisma.roomMember.findMany({
-    where: { roomId: room.id, leftAt: null }, orderBy: { joinedAt: 'asc' },
-    include: { player: { select: { id: true, displayName: true } } },
-  })
-  response.json({
-    room,
-    players: members.map((member) => ({
-      playerId: member.playerId,
-      displayName: member.player.displayName,
-      isHost: room.hostPlayerId === member.playerId,
-      isReady: member.isReady,
-      isConnected: member.disconnectedAt === null,
-    })),
-  })
+  response.json(await getRoomDetailsForPlayer(roomId, request.auth!.playerId))
 }))
 
 apiRouter.get('/rooms/:roomId/game', requireSession, asyncRoute(async (request, response) => {

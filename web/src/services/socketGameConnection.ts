@@ -64,14 +64,14 @@ export class SocketGameConnection implements GameRealtimeConnection {
     for (const listener of this.statusListeners) listener(status)
   }
 
-  async connect(roomId: string): Promise<void> {
+  async connect(roomId: string): Promise<Room> {
     await loadSocketClient()
     await this.disconnect()
     const factory = window.io
     if (!factory) throw new Error('Socket.IO client is unavailable.')
     const socket = factory(socketOrigin, { withCredentials: true, autoConnect: false })
     this.socket = socket
-    await new Promise<void>((resolve, reject) => {
+    return await new Promise<Room>((resolve, reject) => {
       const timeout = window.setTimeout(() => reject(new Error('Timed out while joining the room.')), 10_000)
       let joined = false
       socket.on('connect', () => {
@@ -82,19 +82,15 @@ export class SocketGameConnection implements GameRealtimeConnection {
       })
       socket.on('disconnect', () => this.notifyStatus('reconnecting'))
       socket.on('connect_error', () => this.notifyStatus('reconnecting'))
-      socket.once('connect_error', (error) => {
-        window.clearTimeout(timeout)
-        reject(error)
-      })
       socket.once('server:error', (error) => {
         window.clearTimeout(timeout)
         reject(new GameApiError(409, error))
       })
-      socket.once('room:state', () => {
+      socket.once('room:state', (room) => {
         if (!joined) {
           joined = true
           window.clearTimeout(timeout)
-          resolve()
+          resolve(room)
         }
       })
       socket.connect()
@@ -112,15 +108,9 @@ export class SocketGameConnection implements GameRealtimeConnection {
 
   onConnectionError(listener: (error: import('../domain/types').ApiError) => void): () => void {
     const socket = this.requireSocket()
-    const handleError = (error: Error) => listener({ code: 'SOCKET_CONNECTION', message: error.message })
-    const handleDisconnect = (reason: string) => listener({ code: 'SOCKET_DISCONNECTED', message: reason })
-    socket.on('connect_error', handleError)
-    socket.on('disconnect', handleDisconnect)
     const handleServerError = (error: import('../domain/types').ApiError) => listener(error)
     socket.on('server:error', handleServerError)
     return () => {
-      socket.off('connect_error', handleError)
-      socket.off('disconnect', handleDisconnect)
       socket.off('server:error', handleServerError)
     }
   }

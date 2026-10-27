@@ -5,6 +5,9 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().min(1).max(65535).default(3001),
   DATABASE_URL: z.string().min(1),
   TRUSTED_ORIGINS: z.string().default('http://localhost:5173'),
+  // Leave empty until the hosting platform's trusted proxy addresses are verified.
+  // Broad private-network ranges can trust forwarded addresses from unrelated clients.
+  TRUSTED_PROXY_CIDRS: z.string().default(''),
   SOCKET_PUBLIC_ORIGIN: z.string().url().default('http://localhost:3001'),
   COOKIE_NAME: z.string().min(1).default('samkaro_session'),
   COOKIE_SECURE: z.stringbool().default(false),
@@ -25,6 +28,7 @@ if (!parsed.success) {
 export const env = {
   ...parsed.data,
   trustedOrigins: new Set(parsed.data.TRUSTED_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean)),
+  trustedProxyCidrs: parsed.data.TRUSTED_PROXY_CIDRS.split(',').map((cidr) => cidr.trim()).filter(Boolean),
   sessionTtlMs: parsed.data.SESSION_TTL_DAYS * 24 * 60 * 60 * 1000,
   reconnectGraceMs: parsed.data.RECONNECT_GRACE_SECONDS * 1000,
 }

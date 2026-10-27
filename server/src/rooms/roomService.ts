@@ -1,7 +1,8 @@
 import { randomBytes } from 'node:crypto'
-import type { Room as RoomDto } from '../../../shared/contracts.js'
+import type { Room as RoomDto, RoomDetails } from '../../../shared/contracts.js'
 import { env } from '../config/env.js'
 import { prisma } from '../db/prisma.js'
+import { retryDatabaseTransaction } from '../db/retryTransaction.js'
 import { HttpError } from '../http/errors.js'
 import { hasActiveMembership, roomAllowsMemberLeave, roomHasCapacity } from './roomPolicy.js'
 
@@ -21,7 +22,7 @@ function createRoomCode(): string {
 
 function toRoomDto(room: {
   id: string; code: string; hostPlayerId: string; status: 'WAITING' | 'IN_PROGRESS' | 'FINISHED'; capacity: number;
-  members: Array<{ playerId: string; isReady: boolean; player: { id: string; displayName: string } }>
+  members: Array<{ playerId: string; isReady: boolean; disconnectedAt: Date | null; player: { id: string; displayName: string } }>
 }): RoomDto {
   return {
     id: room.id,
@@ -31,6 +32,14 @@ function toRoomDto(room: {
     status: room.status === 'WAITING' ? 'waiting' : room.status === 'IN_PROGRESS' ? 'in-progress' : 'finished',
     capacity: room.capacity,
     readyPlayerIds: room.members.filter((member) => member.isReady).map((member) => member.playerId),
+    connectedPlayerIds: room.members.filter((member) => member.disconnectedAt === null).map((member) => member.playerId),
+    members: room.members.map((member) => ({
+      playerId: member.playerId,
+      displayName: member.player.displayName,
+      isHost: room.hostPlayerId === member.playerId,
+      isReady: member.isReady,
+      isConnected: member.disconnectedAt === null,
+    })),
   }
 }
 
@@ -77,25 +86,26 @@ export async function joinRoom(playerId: string, code: string): Promise<RoomDto>
   const room = await prisma.room.findUnique({ where: { code }, select: { id: true, status: true, capacity: true } })
   if (!room || room.status !== 'WAITING') throw new HttpError(404, 'ROOM_NOT_FOUND', 'Room is unavailable.')
   try {
-    await prisma.$transaction(async (transaction) => {
+    return await prisma.$transaction(async (transaction) => {
       const currentRoom = await transaction.room.findUnique({ where: { id: room.id }, select: { status: true, capacity: true } })
       if (!currentRoom || currentRoom.status !== 'WAITING') throw new HttpError(404, 'ROOM_NOT_FOUND', 'Room is unavailable.')
       const existing = await transaction.roomMember.findUnique({ where: { roomId_playerId: { roomId: room.id, playerId } } })
-      if (existing && !existing.leftAt) return
-      const count = await transaction.roomMember.count({ where: { roomId: room.id, leftAt: null } })
-      if (!roomHasCapacity(currentRoom.capacity, count)) throw new HttpError(409, 'ROOM_FULL', 'This room is full.')
-      if (count === 0) await transaction.room.update({ where: { id: room.id }, data: { hostPlayerId: playerId } })
-      if (existing) {
-        await transaction.roomMember.update({ where: { roomId_playerId: { roomId: room.id, playerId } }, data: { leftAt: null, disconnectedAt: null, isReady: false, joinedAt: new Date() } })
-      } else {
-        await transaction.roomMember.create({ data: { roomId: room.id, playerId } })
+      if (!existing || existing.leftAt) {
+        const count = await transaction.roomMember.count({ where: { roomId: room.id, leftAt: null } })
+        if (!roomHasCapacity(currentRoom.capacity, count)) throw new HttpError(409, 'ROOM_FULL', 'This room is full.')
+        if (count === 0) await transaction.room.update({ where: { id: room.id }, data: { hostPlayerId: playerId } })
+        if (existing) {
+          await transaction.roomMember.update({ where: { roomId_playerId: { roomId: room.id, playerId } }, data: { leftAt: null, disconnectedAt: null, isReady: false, joinedAt: new Date() } })
+        } else {
+          await transaction.roomMember.create({ data: { roomId: room.id, playerId } })
+        }
       }
+      return toRoomDto(await transaction.room.findUniqueOrThrow({ where: { id: room.id }, include: membersInclude }))
     }, { isolationLevel: 'Serializable' })
   } catch (error) {
     if ((error as { code?: string }).code === 'P2034') throw new HttpError(409, 'ROOM_CHANGED', 'Room membership changed. Please retry.')
     throw error
   }
-  return getRoomForPlayer(room.id, playerId)
 }
 
 export async function getRoomForPlayer(roomId: string, playerId: string): Promise<RoomDto> {
@@ -106,40 +116,84 @@ export async function getRoomForPlayer(roomId: string, playerId: string): Promis
   return toRoomDto(room)
 }
 
+export async function getRoomDetailsForPlayer(roomId: string, playerId: string): Promise<RoomDetails> {
+  const room = await prisma.room.findUnique({ where: { id: roomId }, include: membersInclude })
+  if (!room || !room.members.some((member) => member.playerId === playerId)) throw new HttpError(403, 'ROOM_MEMBERSHIP_REQUIRED', 'You are not an active member of this room.')
+  const dto = toRoomDto(room)
+  return {
+    room: dto,
+    players: room.members.map((member) => ({
+      playerId: member.playerId,
+      displayName: member.player.displayName,
+      isHost: room.hostPlayerId === member.playerId,
+      isReady: member.isReady,
+      isConnected: member.disconnectedAt === null,
+    })),
+  }
+}
+
 /** Internal room summary for broadcasting membership changes after the actor has left. */
 export async function getRoomSnapshot(roomId: string): Promise<RoomDto | null> {
   const room = await prisma.room.findUnique({ where: { id: roomId }, include: membersInclude })
   return room ? toRoomDto(room) : null
 }
 
-export async function setReady(roomId: string, playerId: string, ready: boolean): Promise<RoomDto> {
-  await prisma.$transaction(async (transaction) => {
-    const member = await transaction.roomMember.findUnique({ where: { roomId_playerId: { roomId, playerId } } })
+export async function restoreRoomMembership(roomId: string, playerId: string, now = Date.now()): Promise<RoomDto> {
+  return prisma.$transaction(async (transaction) => {
+    const member = await transaction.roomMember.findUnique({
+      where: { roomId_playerId: { roomId, playerId } },
+      include: { room: { select: { status: true } } },
+    })
     if (!member || member.leftAt) throw new HttpError(403, 'ROOM_MEMBERSHIP_REQUIRED', 'You are not an active member of this room.')
-    const room = await transaction.room.findUnique({ where: { id: roomId }, select: { status: true } })
-    if (!room || room.status !== 'WAITING') throw new HttpError(409, 'ROOM_NOT_WAITING', 'Readiness can only change in a waiting room.')
-    await transaction.roomMember.update({ where: { roomId_playerId: { roomId, playerId } }, data: { isReady: ready } })
+    if (member.disconnectedAt && now - member.disconnectedAt.getTime() > env.reconnectGraceMs) {
+      throw new HttpError(409, 'RECONNECT_WINDOW_EXPIRED', 'The reconnect grace period has expired.')
+    }
+    const updated = await transaction.roomMember.updateMany({
+      where: { roomId, playerId, leftAt: null },
+      data: { disconnectedAt: null },
+    })
+    if (!updated.count) throw new HttpError(403, 'ROOM_MEMBERSHIP_REQUIRED', 'You are not an active member of this room.')
+    const room = await transaction.room.findUnique({ where: { id: roomId }, include: membersInclude })
+    if (!room) throw new HttpError(404, 'ROOM_NOT_FOUND', 'Room does not exist.')
+    return toRoomDto(room)
   })
-  return getRoomForPlayer(roomId, playerId)
+}
+
+export async function setReady(roomId: string, playerId: string, ready: boolean): Promise<RoomDto> {
+  return prisma.$transaction(async (transaction) => {
+    const room = await transaction.room.findUnique({ where: { id: roomId }, include: membersInclude })
+    const member = room?.members.find((entry) => entry.playerId === playerId)
+    if (!room || !member) throw new HttpError(403, 'ROOM_MEMBERSHIP_REQUIRED', 'You are not an active member of this room.')
+    if (room.status !== 'WAITING') throw new HttpError(409, 'ROOM_NOT_WAITING', 'Readiness can only change in a waiting room.')
+    await transaction.roomMember.update({ where: { roomId_playerId: { roomId, playerId } }, data: { isReady: ready } })
+    const updatedRoom = await transaction.room.findUnique({ where: { id: roomId }, include: membersInclude })
+    if (!updatedRoom) throw new HttpError(404, 'ROOM_NOT_FOUND', 'Room does not exist.')
+    return toRoomDto(updatedRoom)
+  })
 }
 
 export async function leaveRoom(roomId: string, playerId: string): Promise<RoomDto | null> {
-  await prisma.$transaction(async (transaction) => {
+  await retryDatabaseTransaction(() => prisma.$transaction(async (transaction) => {
+    const room = await transaction.room.findUnique({ where: { id: roomId }, select: { hostPlayerId: true, status: true } })
     const member = await transaction.roomMember.findUnique({ where: { roomId_playerId: { roomId, playerId } } })
     if (!member || member.leftAt) return
-    const room = await transaction.room.findUnique({ where: { id: roomId }, select: { hostPlayerId: true, status: true } })
     if (room && !roomAllowsMemberLeave(room.status)) {
       throw new HttpError(409, 'MATCH_IN_PROGRESS', 'A player cannot leave the room during an active match. Disconnect to reconnect during the grace period; missed turns will time out.')
     }
-    await transaction.roomMember.update({ where: { roomId_playerId: { roomId, playerId } }, data: { leftAt: new Date(), disconnectedAt: null } })
+    const leftAt = new Date()
+    const leave = await transaction.roomMember.updateMany({
+      where: { roomId, playerId, leftAt: null },
+      data: { leftAt, disconnectedAt: null },
+    })
+    if (!leave.count) return
     if (room?.hostPlayerId === playerId) {
       const successor = await transaction.roomMember.findFirst({
         where: { roomId, leftAt: null, disconnectedAt: null, playerId: { not: playerId } },
         orderBy: { joinedAt: 'asc' }, select: { playerId: true },
       })
-      if (successor) await transaction.room.update({ where: { id: roomId }, data: { hostPlayerId: successor.playerId } })
+      if (successor) await transaction.room.updateMany({ where: { id: roomId, hostPlayerId: playerId }, data: { hostPlayerId: successor.playerId } })
     }
-  }, { isolationLevel: 'Serializable' })
+  }, { isolationLevel: 'Serializable' }))
   return getRoomSnapshot(roomId)
 }
 

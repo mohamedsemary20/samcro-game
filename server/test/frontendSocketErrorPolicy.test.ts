@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isDefinitiveRoomRestoreFailure, isSocketTransportFailure, socketErrorMessage } from '../../web/src/services/socketErrorPolicy.js'
+import { isDefinitiveRoomRestoreFailure, isSocketTransportFailure, isUncertainActionOutcome, RetryableActionKey, socketErrorMessage } from '../../web/src/services/socketErrorPolicy.js'
 
 describe('frontend socket error policy', () => {
   it('keeps expected action rejections on the connected room screen', () => {
@@ -12,6 +12,19 @@ describe('frontend socket error policy', () => {
     expect(isSocketTransportFailure('SOCKET_CONNECTION')).toBe(true)
     expect(isSocketTransportFailure('SOCKET_DISCONNECTED')).toBe(true)
     expect(isSocketTransportFailure('SESSION_EXPIRED')).toBe(true)
+  })
+
+  it('classifies lost acknowledgements as uncertain and reuses one key for a retry', () => {
+    let keyNumber = 0
+    const keys = new RetryableActionKey(() => `key-${++keyNumber}`)
+    expect(isUncertainActionOutcome('ACK_TIMEOUT')).toBe(true)
+    expect(isUncertainActionOutcome('SOCKET_DISCONNECTED')).toBe(true)
+    expect(isUncertainActionOutcome('OUT_OF_TURN')).toBe(false)
+    expect(keys.forFingerprint('match:round:guess:12')).toBe('key-1')
+    expect(keys.forFingerprint('match:round:guess:12')).toBe('key-1')
+    expect(keys.forFingerprint('match:round:guess:13')).toBe('key-2')
+    keys.clear()
+    expect(keys.forFingerprint('match:round:guess:13')).toBe('key-3')
   })
 
   it('keeps saved room membership through transient restore failures', () => {

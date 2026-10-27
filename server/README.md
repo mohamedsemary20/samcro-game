@@ -108,6 +108,8 @@ For a production release, run `npm run build` followed by `npm run release:produ
 
 The web deployment settings are documented in `../web/README.md`. Production question import and Pages deployment still require access to the intended production database and Cloudflare Pages project.
 
+The backend Abasthan project root, build/start commands, Node version, Prisma generation, runtime path, and proxy trust setting are documented in [ABASTHAN-DEPLOYMENT.md](ABASTHAN-DEPLOYMENT.md). The server uses `TRUSTED_PROXY_CIDRS` to recognize only configured proxy peers before consuming `X-Forwarded-For`; set it to Abasthan's published proxy ranges when available.
+
 ## Current limitations
 
 - The server currently runs as a single instance. Horizontal scaling needs a Socket.IO Redis adapter, shared rate limiting, and a worker/lease mechanism for timed actions.

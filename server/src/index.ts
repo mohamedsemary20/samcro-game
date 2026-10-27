@@ -23,13 +23,17 @@ if (env.SAMKARO_ENABLE_TEST_QUESTION_POOL === '1') {
 const httpServer = createServer(app)
 const io = attachSocketServer(httpServer)
 
+let runningRoomMaintenance = false
 const maintenanceTimer = setInterval(() => {
+  if (runningRoomMaintenance) return
+  runningRoomMaintenance = true
   void expireDisconnectedLobbyMembers().then(async (roomIds) => {
     for (const roomId of roomIds) {
       const room = await getRoomSnapshot(roomId)
       if (room) io.to(`room:${roomId}`).emit('room:state', room)
     }
-  }).catch((error: unknown) => logger.error('room_maintenance_failed', { error: error instanceof Error ? error.message : 'unknown' }))
+  }).catch((error: unknown) => logger.error('room_maintenance_failed', { errorType: error instanceof Error ? error.name : 'unknown' }))
+    .finally(() => { runningRoomMaintenance = false })
 }, 5_000)
 maintenanceTimer.unref()
 

@@ -1,5 +1,5 @@
 import { randomInt } from 'node:crypto'
-import type { Prisma } from '@prisma/client'
+import type { Prisma, PrismaClient } from '@prisma/client'
 import type { PlayerHint, Question as PublicQuestion } from '../../../shared/contracts.js'
 import { generatePlayerHint, type RandomInt } from '../game/hintGenerator.js'
 import { assertLiveLocalTestPoolDatabase, assertLocalTestPoolEnvironment, isLocalTestQuestionMetadata, LOCAL_TEST_QUESTION_FLAG, LOCAL_TEST_QUESTION_SOURCE } from './localTestQuestionPool.js'
@@ -20,10 +20,12 @@ function integrationFixtureEnvironmentAllowed(): boolean {
 }
 
 export interface QuestionRepository {
-  getActiveById(transaction: Prisma.TransactionClient, questionId: string): Promise<GameQuestion>
-  getHintForPlayer?(transaction: Prisma.TransactionClient, questionId: string, playerId: string, roundPlayerIds: string[]): Promise<GameQuestion>
-  selectUnused(transaction: Prisma.TransactionClient, usedQuestionIds: string[]): Promise<GameQuestion>
+  getActiveById(client: QuestionClient, questionId: string): Promise<GameQuestion>
+  getHintForPlayer?(client: QuestionClient, questionId: string, playerId: string, roundPlayerIds: string[]): Promise<GameQuestion>
+  selectUnused(client: QuestionClient, usedQuestionIds: string[]): Promise<GameQuestion>
 }
+
+export type QuestionClient = Prisma.TransactionClient | PrismaClient
 
 export interface GameQuestion {
   id: string
@@ -69,10 +71,10 @@ export class NoEligibleQuestionsError extends Error {
 
 export const QUESTIONS_PER_MATCH = 5
 
-export async function selectQuestionsForMatch(transaction: Prisma.TransactionClient, repository: QuestionRepository): Promise<GameQuestion[]> {
+export async function selectQuestionsForMatch(client: QuestionClient, repository: QuestionRepository): Promise<GameQuestion[]> {
   const selected: GameQuestion[] = []
   for (let round = 0; round < QUESTIONS_PER_MATCH; round += 1) {
-    selected.push(await repository.selectUnused(transaction, selected.map((question) => question.id)))
+    selected.push(await repository.selectUnused(client, selected.map((question) => question.id)))
   }
   return selected
 }
@@ -97,7 +99,7 @@ export class PrismaQuestionRepository implements QuestionRepository {
     })
   }
 
-  private async verifyLocalDatabase(transaction: Prisma.TransactionClient): Promise<void> {
+  private async verifyLocalDatabase(transaction: QuestionClient): Promise<void> {
     if (!this.localTestPoolEnabled) return
     await assertLiveLocalTestPoolDatabase(async () => {
       const result = await transaction.$queryRaw<Array<{ name: string }>>`SELECT current_database() AS name`
@@ -105,7 +107,7 @@ export class PrismaQuestionRepository implements QuestionRepository {
     })
   }
 
-  async getActiveById(transaction: Prisma.TransactionClient, questionId: string): Promise<GameQuestion> {
+  async getActiveById(transaction: QuestionClient, questionId: string): Promise<GameQuestion> {
     await this.verifyLocalDatabase(transaction)
     const question = await transaction.question.findUnique({
       where: { id: questionId },
@@ -130,12 +132,12 @@ export class PrismaQuestionRepository implements QuestionRepository {
     return { ...question, hint: generated }
   }
 
-  async getHintForPlayer(transaction: Prisma.TransactionClient, questionId: string, playerId: string, roundPlayerIds: string[]): Promise<GameQuestion> {
+  async getHintForPlayer(transaction: QuestionClient, questionId: string, playerId: string, roundPlayerIds: string[]): Promise<GameQuestion> {
     if (!roundPlayerIds.includes(playerId)) throw new Error('HINT_PLAYER_NOT_IN_ROUND')
     return this.getActiveById(transaction, questionId)
   }
 
-  async selectUnused(transaction: Prisma.TransactionClient, usedQuestionIds: string[]): Promise<GameQuestion> {
+  async selectUnused(transaction: QuestionClient, usedQuestionIds: string[]): Promise<GameQuestion> {
     await this.verifyLocalDatabase(transaction)
     if (this.localTestPoolEnabled) {
       const questions = await transaction.question.findMany({

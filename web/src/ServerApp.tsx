@@ -10,7 +10,7 @@ import { GameApiError } from './services/contracts'
 import type { ApiError } from './domain/types'
 import { gameApi } from './services/httpGameApiClient'
 import { gameRealtime } from './services/socketGameConnection'
-import { isDefinitiveRoomRestoreFailure, isSocketTransportFailure, socketErrorMessage } from './services/socketErrorPolicy'
+import { isDefinitiveRoomRestoreFailure, isSocketTransportFailure, isUncertainActionOutcome, RetryableActionKey, socketErrorMessage } from './services/socketErrorPolicy'
 import './styles.css'
 
 type Player = { id: string; name: string }
@@ -34,6 +34,20 @@ function errorMessage(cause: unknown): string {
   if (cause instanceof GameApiError) return 'ما قدرناش نكمّل الطلب. راجع البيانات وجرب تاني.'
   if (cause instanceof Error) return 'في مشكلة في الاتصال. اتأكد من الشبكة وجرب تاني.'
   return 'حصلت مشكلة غير متوقعة. جرب تاني.'
+}
+
+function roomDetailsFromSummary(summary: Room, player: Player | null): RoomDetails {
+  const connected = new Set(summary.connectedPlayerIds ?? [])
+  return {
+    room: summary,
+    players: summary.members ?? summary.playerIds.map((playerId) => ({
+      playerId,
+      displayName: playerId === player?.id ? player.name : 'Player',
+      isHost: summary.hostPlayerId === playerId,
+      isReady: summary.readyPlayerIds?.includes(playerId) ?? false,
+      isConnected: summary.connectedPlayerIds ? connected.has(playerId) : true,
+    })),
+  }
 }
 
 export default function ServerApp() {
@@ -62,6 +76,9 @@ export default function ServerApp() {
   const [pendingBalanceBefore, setPendingBalanceBefore] = useState<number | null>(null)
   const actionLock = useRef(false)
   const startLock = useRef(false)
+  const createRoomIdempotencyKey = useRef<string | null>(null)
+  const startRequestKey = useRef<string | null>(null)
+  const retryableAction = useRef(new RetryableActionKey())
   const gameStateRef = useRef<PublicGameState | null>(null)
   const roomRef = useRef(room)
   roomRef.current = room
@@ -130,8 +147,12 @@ export default function ServerApp() {
     gameStateRef.current = null
     setPrivateState(null)
     setRoundResult(null)
-    void gameRealtime.connect(roomId).then(() => {
+    void gameRealtime.connect(roomId).then((initialRoom) => {
       if (disposed) return gameRealtime.disconnect()
+      const initialDetails = roomDetailsFromSummary(initialRoom, player)
+      roomRef.current = initialDetails
+      setRoom(initialDetails)
+      setRoomConfirmed(true)
       stopErrors = gameRealtime.onConnectionError((cause) => {
         const transportFailure = isSocketTransportFailure(cause.code)
         if (transportFailure) {
@@ -146,13 +167,27 @@ export default function ServerApp() {
         }
       })
       stopRoom = gameRealtime.onRoomState((nextRoom: Room) => {
-        void gameApi.getRoom(nextRoom.id).then((details) => {
-          if (!disposed) {
-            setRoom(details)
-            setRoomConfirmed(true)
-          }
-          if (nextRoom.status === 'finished') void recoverLeaderboard(details.room.code)
-        }).catch((cause: unknown) => { if (!disposed) setError(errorMessage(cause)) })
+        const current = roomRef.current
+        const fallback = roomDetailsFromSummary(nextRoom, player)
+        const base = current?.room.id === nextRoom.id ? current : fallback
+        const knownPlayers = new Map(base.players.map((member) => [member.playerId, member]))
+        const updated: RoomDetails = {
+          room: nextRoom,
+          players: nextRoom.playerIds.map((playerId) => {
+            const existing = knownPlayers.get(playerId)
+            return {
+              playerId,
+              displayName: nextRoom.members?.find((member) => member.playerId === playerId)?.displayName ?? existing?.displayName ?? fallback.players.find((member) => member.playerId === playerId)?.displayName ?? 'Player',
+              isHost: nextRoom.hostPlayerId === playerId,
+              isReady: nextRoom.members?.find((member) => member.playerId === playerId)?.isReady ?? nextRoom.readyPlayerIds?.includes(playerId) ?? false,
+              isConnected: nextRoom.members?.find((member) => member.playerId === playerId)?.isConnected ?? (nextRoom.connectedPlayerIds ? nextRoom.connectedPlayerIds.includes(playerId) : existing?.isConnected ?? true),
+            }
+          }),
+        }
+        roomRef.current = updated
+        setRoom(updated)
+        setRoomConfirmed(true)
+        if (nextRoom.status === 'finished') void recoverLeaderboard(nextRoom.code)
       })
       stopGame = gameRealtime.onPublicGameState((next) => {
         const current = gameStateRef.current
@@ -180,12 +215,6 @@ export default function ServerApp() {
         setRoundResult(null)
         setTab('leaderboard')
       })
-      void gameApi.getRoom(roomId).then((details) => {
-        if (!disposed) {
-          setRoom(details)
-          setRoomConfirmed(true)
-        }
-      }).catch((cause: unknown) => { if (!disposed) setError(errorMessage(cause)) })
       const currentRoom = roomRef.current
       if (currentRoom?.room.status === 'finished') void recoverLeaderboard(currentRoom.room.code)
       else gameRealtime.syncGameState(roomId)
@@ -220,8 +249,8 @@ export default function ServerApp() {
       setGameState(null)
       setPrivateState(null)
       setTab('leaderboard')
-    } catch (cause) {
-      setError(errorMessage(cause))
+    } catch {
+      setNotice('Ù…Ø§ Ù‚Ø¯Ø±Ù†Ø§Ø´ Ù†Ø­Ù…Ù‘Ù„ Ø§Ù„ØªØ±ØªÙŠØ¨ Ø§Ù„Ø¯Ù„ÙˆÙ‚ØªÙŠ. Ø­Ø§ÙˆÙ„ ØªØ­Ø¯Ù‘Ø« Ø§Ù„ØµÙØ­Ø©.')
     }
   }
 
@@ -239,9 +268,13 @@ export default function ServerApp() {
 
   async function enterRoom(nextRoom: Room): Promise<void> {
     setError('')
-    const details = await gameApi.getRoom(nextRoom.id)
-    sessionStorage.setItem(ACTIVE_ROOM_KEY, nextRoom.id)
-    setRoom(details)
+    if (roomRef.current?.room.id !== nextRoom.id) {
+      startRequestKey.current = null
+      retryableAction.current.clear()
+    }
+    try { sessionStorage.setItem(ACTIVE_ROOM_KEY, nextRoom.id) } catch { /* This tab can use the room without saved restoration. */ }
+    setRoom(roomDetailsFromSummary(nextRoom, player))
+    setRoomConfirmed(true)
     setRoomRestoreFailed(false)
     setLeaderboard(null)
     setTab('lobby')
@@ -250,7 +283,12 @@ export default function ServerApp() {
   async function createRoom(): Promise<void> {
     setBusy(true)
     setError('')
-    try { await enterRoom(await gameApi.createRoom(7)) }
+    try {
+      const idempotencyKey = createRoomIdempotencyKey.current ?? crypto.randomUUID()
+      createRoomIdempotencyKey.current = idempotencyKey
+      await enterRoom(await gameApi.createRoom(7, idempotencyKey))
+      createRoomIdempotencyKey.current = null
+    }
     catch (cause) { setError(errorMessage(cause)) }
     finally { setBusy(false) }
   }
@@ -269,6 +307,8 @@ export default function ServerApp() {
       try { gameRealtime.leaveRoom(room.room.id) } catch { /* The transport may already be disconnected. */ }
     }
     sessionStorage.removeItem(ACTIVE_ROOM_KEY)
+    startRequestKey.current = null
+    retryableAction.current.clear()
     setRoom(null)
     setRoomConfirmed(false)
     setGameState(null)
@@ -310,8 +350,21 @@ export default function ServerApp() {
     setStartingMatch(true)
     setError('')
     try {
-      const result = await gameRealtime.startMatch(crypto.randomUUID())
-      if (!result.ok) setError(socketActionError(result.error))
+      const key = startRequestKey.current ?? crypto.randomUUID()
+      startRequestKey.current = key
+      const result = await gameRealtime.startMatch(key)
+      if (result.ok) {
+        startRequestKey.current = null
+      } else if (result.error.code === 'ACTION_ALREADY_APPLIED') {
+        startRequestKey.current = null
+        if (room) gameRealtime.syncGameState(room.room.id)
+      } else if (result.error.code === 'ACK_TIMEOUT' || result.error.code === 'SOCKET_DISCONNECTED') {
+        setNotice('بنراجع حالة المباراة قبل ما نعيد الطلب.')
+        if (room) gameRealtime.syncGameState(room.room.id)
+      } else {
+        startRequestKey.current = null
+        setError(socketActionError(result.error))
+      }
     } catch {
       setError('تعذر إرسال طلب بدء المباراة. تحقق من الاتصال ثم حاول مرة أخرى.')
     } finally {
@@ -320,18 +373,34 @@ export default function ServerApp() {
     }
   }
 
-  async function performAction(kind: 'hint' | 'loan' | 'guess' | 'bet', action: () => Promise<import('./domain/types').ActionAcknowledgement>): Promise<void> {
+  async function performAction(kind: 'hint' | 'loan' | 'guess' | 'bet', fingerprint: string, action: (idempotencyKey: string) => Promise<import('./domain/types').ActionAcknowledgement>): Promise<void> {
     if (actionLock.current) return
     actionLock.current = true
     setPendingAction(kind)
     setPendingBalanceBefore(kind === 'bet' ? privateState?.availableChips ?? null : null)
     setError('')
     try {
-      const result = await action()
+      const idempotencyKey = retryableAction.current.forFingerprint(fingerprint)
+      const result = await action(idempotencyKey)
+      if (result.ok) {
+        retryableAction.current.clear()
+        return
+      }
+      if (result.error.code === 'ACTION_ALREADY_APPLIED') {
+        retryableAction.current.clear()
+        setNotice('Action already received; syncing the current game state.')
+        if (room) gameRealtime.syncGameState(room.room.id)
+        return
+      }
+      if (isUncertainActionOutcome(result.error.code)) {
+        setNotice('بنراجع حالة الحركة قبل ما نعيدها.')
+        if (room) gameRealtime.syncGameState(room.room.id)
+        return
+      }
+      retryableAction.current.clear()
       if (!result.ok) {
         setError(socketActionError(result.error))
-        if (room) gameRealtime.syncGameState(room.room.id)
-      } else if (room) gameRealtime.syncGameState(room.room.id)
+      }
     } catch {
       setError('الحركة ما وصلتش للسيرفر. بنراجع حالة الجولة؛ استنى التأكيد قبل ما تعيدها.')
       if (room) gameRealtime.syncGameState(room.room.id)
@@ -345,11 +414,11 @@ export default function ServerApp() {
   function submitServerGuess(): void {
     const result = validateGuess(guessText)
     if (result.value === undefined) { setError(result.error ?? 'أدخل تخميناً رقمياً صالحاً.'); return }
-    void performAction('guess', () => gameRealtime.submitGuess(result.value!, crypto.randomUUID()))
+    void performAction('guess', `${gameState?.session.id}:${gameState?.session.roundNumber}:guess:${result.value}`, (key) => gameRealtime.submitGuess(result.value!, key))
   }
 
   function submitBet(action: BetAction): void {
-    void performAction('bet', () => gameRealtime.submitBet(action, crypto.randomUUID()))
+    void performAction('bet', `${gameState?.session.id}:${gameState?.session.roundNumber}:${gameState?.session.version}:${JSON.stringify(action)}`, (key) => gameRealtime.submitBet(action, key))
   }
 
   async function copyRoomCode(): Promise<void> {
@@ -381,8 +450,8 @@ export default function ServerApp() {
       onPhase={() => undefined}
       onBet={submitBet}
       onSubmitGuess={submitServerGuess}
-      onRequestHint={() => { void performAction('hint', () => gameRealtime.requestHint(crypto.randomUUID())) }}
-      onRequestLoan={() => { void performAction('loan', () => gameRealtime.requestLoan(crypto.randomUUID())) }}
+      onRequestHint={() => { void performAction('hint', `hint:${gameState?.session.id}:${gameState?.session.roundNumber}`, (key) => gameRealtime.requestHint(key)) }}
+      onRequestLoan={() => { void performAction('loan', `loan:${gameState?.session.id}:${gameState?.session.roundNumber}`, (key) => gameRealtime.requestLoan(key)) }}
       onSync={() => gameRealtime.syncGameState(room!.room.id)}
       pendingAction={pendingAction}
       pendingBalanceBefore={pendingBalanceBefore}
