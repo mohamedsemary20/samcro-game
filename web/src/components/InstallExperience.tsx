@@ -21,6 +21,7 @@ export function InstallExperience() {
   const [standalone, setStandalone] = useState(false)
   const [iosHelp, setIosHelp] = useState(false)
   const [dismissed, setDismissed] = useState(false)
+  const [installing, setInstalling] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {
@@ -60,10 +61,15 @@ export function InstallExperience() {
   }, [iosHelp])
 
   async function install(): Promise<void> {
-    if (!installPrompt) return
-    await installPrompt.prompt()
-    const choice = await installPrompt.userChoice
-    if (choice.outcome === 'accepted') setInstallPrompt(null)
+    if (!installPrompt || installing) return
+    setInstalling(true)
+    try {
+      await installPrompt.prompt()
+      const choice = await installPrompt.userChoice
+      if (choice.outcome === 'accepted') setInstallPrompt(null)
+    } finally {
+      setInstalling(false)
+    }
   }
 
   if (standalone || dismissed || (!installPrompt && !showIosHelp)) return null
@@ -72,7 +78,7 @@ export function InstallExperience() {
     <aside className="install-nudge" aria-label="تثبيت سمكرو">
       <span className="install-nudge-mark"><Icon name="download" size={18} /></span>
       <span className="install-nudge-copy"><strong>سمكرو على موبايلك</strong><small>افتح اللعبة من شاشتك الرئيسية</small></span>
-      <button className="install-nudge-action" type="button" onClick={() => installPrompt ? void install() : setIosHelp(true)}>{installPrompt ? 'تثبيت' : 'إزاي؟'}</button>
+      <button className="install-nudge-action" type="button" disabled={installing} onClick={() => installPrompt ? void install() : setIosHelp(true)}>{installing ? 'بنجهّز…' : installPrompt ? 'تثبيت' : 'إزاي؟'}</button>
       <button className="install-nudge-close" type="button" aria-label="إخفاء اقتراح التثبيت" onClick={() => setDismissed(true)}><Icon name="close" size={17} /></button>
     </aside>
     <dialog className="install-dialog" ref={dialogRef} onCancel={() => setIosHelp(false)} aria-labelledby="install-dialog-title">

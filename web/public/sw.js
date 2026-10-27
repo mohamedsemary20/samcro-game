@@ -1,4 +1,4 @@
-const CACHE_NAME = 'samkaro-static-v1'
+const CACHE_NAME = 'samkaro-static-v2'
 const SHELL_URLS = ['/offline.html', '/manifest.webmanifest', '/assets/app-logo.png', '/assets/hero-casino-banner.png', '/assets/cairo.ttf', '/assets/tajawal.ttf']
 
 self.addEventListener('install', (event) => {
@@ -9,8 +9,18 @@ self.addEventListener('install', (event) => {
       const response = await fetch('/', { cache: 'no-store' })
       if (response.ok) {
         const html = await response.text()
-        const assets = [...html.matchAll(/(?:src|href)="(\/assets\/[^"?#]+\.(?:js|css))"/g)].map((match) => match[1])
-        await cache.addAll(assets)
+        const entryAssets = [...html.matchAll(/(?:src|href)="(\/assets\/[^"?#]+\.(?:js|css))"/g)].map((match) => match[1])
+        await cache.addAll(entryAssets)
+        const staticBundles = new Set(entryAssets)
+        for (const asset of entryAssets.filter((path) => path.endsWith('.js'))) {
+          const bundle = await cache.match(asset)
+          if (!bundle) continue
+          const source = await bundle.text()
+          for (const match of source.matchAll(/["']((?:\.\/)?assets\/[^"']+\.(?:js|css))["']/g)) {
+            staticBundles.add(`/${match[1].replace(/^\.\//, '')}`)
+          }
+        }
+        await cache.addAll([...staticBundles].filter((path) => !entryAssets.includes(path)))
       }
     } catch { /* The offline page remains available if build assets cannot be fetched. */ }
     await self.skipWaiting()
