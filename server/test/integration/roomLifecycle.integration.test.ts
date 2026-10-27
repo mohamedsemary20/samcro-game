@@ -394,6 +394,13 @@ suite('PostgreSQL-backed REST and Socket.IO room lifecycle', () => {
       let completion: Array<{ playerId: string; rank: number }> | undefined
       let firstRoundHints: Array<{ playerId: string; hint: PlayerHint }> = []
       const firstRoundPrivateByPlayer = new Map<string, PrivatePlayerState>()
+      const firstActorIndex = identities.findIndex((identity) => identity.playerId === game.session.currentActorId)
+      expect(firstActorIndex).toBeGreaterThanOrEqual(0)
+      const outOfTurnClient = clients[(firstActorIndex + 1) % clients.length]!
+      const outOfTurnDecision = await outOfTurnClient.emitWithAck('game:bet.submit', {
+        idempotencyKey: randomUUID(), action: { type: 'check' },
+      })
+      expect(outOfTurnDecision).toMatchObject({ ok: false, error: { code: 'OUT_OF_TURN' } })
 
       for (let guard = 0; guard < 100 && !completion; guard += 1) {
         const phase = game.session.phase
