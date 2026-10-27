@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { ActionButton } from './components/ActionButton'
 import { AppShell } from './components/AppShell'
+import { Icon } from './components/Icon'
 import { SurfaceCard } from './components/SurfaceCard'
 import type { BetAction, LeaderboardEntry, NavigationTab, PrivatePlayerState, PublicGameState, Room, RoomDetails, RoundResult } from './domain/types'
 import { validateGuess } from './domain/validation'
@@ -12,6 +13,7 @@ import { gameApi } from './services/httpGameApiClient'
 import { gameRealtime } from './services/socketGameConnection'
 import { isDefinitiveRoomRestoreFailure, isSocketTransportFailure, isUncertainActionOutcome, RetryableActionKey, socketErrorMessage } from './services/socketErrorPolicy'
 import './styles.css'
+import './premium.css'
 
 type Player = { id: string; name: string }
 const ACTIVE_ROOM_KEY = 'samkaro.active-room-id'
@@ -65,6 +67,7 @@ export default function ServerApp() {
   const [busy, setBusy] = useState(false)
   const [startingMatch, setStartingMatch] = useState(false)
   const [connected, setConnected] = useState(false)
+  const [browserOnline, setBrowserOnline] = useState(() => navigator.onLine)
   const [roomConnectionAttempt, setRoomConnectionAttempt] = useState(0)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
@@ -82,6 +85,17 @@ export default function ServerApp() {
   const gameStateRef = useRef<PublicGameState | null>(null)
   const roomRef = useRef(room)
   roomRef.current = room
+
+  useEffect(() => {
+    const markOnline = () => setBrowserOnline(true)
+    const markOffline = () => setBrowserOnline(false)
+    window.addEventListener('online', markOnline)
+    window.addEventListener('offline', markOffline)
+    return () => {
+      window.removeEventListener('online', markOnline)
+      window.removeEventListener('offline', markOffline)
+    }
+  }, [])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -433,6 +447,24 @@ export default function ServerApp() {
     }
   }
 
+  async function shareRoom(): Promise<void> {
+    if (!room) return
+    const shareData = { title: 'غرفة سمكرو', text: `ادخلوا غرفة سمكرو بالرمز ${room.room.code}` }
+    try {
+      let usedNativeShare = false
+      if (typeof navigator.share === 'function') {
+        await navigator.share(shareData)
+        usedNativeShare = true
+      }
+      else await navigator.clipboard.writeText(shareData.text)
+      setNotice(usedNativeShare ? 'بعتنا دعوة الغرفة' : 'نسخنا دعوة الغرفة، ابعتها لأصحابك')
+    } catch (cause) {
+      if (cause instanceof Error && cause.name === 'AbortError') return
+      setNotice('ما قدرناش نشارك الدعوة. انسخ رمز الغرفة وجرب تاني')
+    }
+    window.setTimeout(() => setNotice(''), 2600)
+  }
+
   const ready = room?.room.readyPlayerIds?.includes(player?.id ?? '') ?? false
   const gameReady = Boolean(connected && gameState && privateState?.playerId === player?.id && privateState?.matchId === gameState.session.id && privateState?.roundNumber === gameState.session.roundNumber)
   const allReady = Boolean(room && room.players.length >= 3 && room.room.readyPlayerIds?.length === room.players.length)
@@ -495,8 +527,9 @@ export default function ServerApp() {
     content = <section className="sam-lobby">
       <div className="sam-page-intro"><span className="sam-eyebrow"><i /> سمكرو · قبل اللعب</span><h1>لمّيتوا بعض؟</h1><p>ابعت الرمز للشلة. لما الكل يبقى جاهز، ابدأوا الجولة.</p></div>
       <SurfaceCard className="sam-room-card">
-        <div className="sam-room-top"><div><span className="sam-label">رمز الغرفة</span><button className="sam-room-code" onClick={() => void copyRoomCode()} dir="ltr" aria-label="نسخ رمز الغرفة">{room.room.code}<span>⧉</span></button></div><span className={`sam-status ${connected ? 'is-online' : ''}`}><i />{connected ? 'متصل' : 'جارٍ الاتصال'}</span></div>
+        <div className="sam-room-top"><div><span className="sam-label">رمز الغرفة</span><button className="sam-room-code" onClick={() => void copyRoomCode()} dir="ltr" aria-label="نسخ رمز الغرفة">{room.room.code}<Icon name="copy" size={18} /></button></div><span className={`sam-status ${connected ? 'is-online' : ''}`}><i />{connected ? 'متصل' : 'جارٍ الاتصال'}</span></div>
         <p className="sam-share-hint">دوس على الرمز عشان تنسخه وتبعته للشلة <span aria-hidden="true">↙</span></p>
+        <div className="sam-share-actions"><ActionButton tone="quiet" onClick={() => void copyRoomCode()}><Icon name="copy" size={17} /> انسخ الرمز</ActionButton><ActionButton tone="quiet" onClick={() => void shareRoom()}><Icon name="users" size={17} /> شارك دعوة</ActionButton></div>
         <div className="sam-roster-heading"><h2>مين وصل؟</h2><span>{room.players.length} <b>/</b> {room.room.capacity ?? 7}</span></div>
         <div className="sam-roster" aria-live="polite">
       {room.players.length === 0 && <p className="sam-empty-roster">لسه مستنيين الباقيين…</p>}
@@ -524,8 +557,8 @@ export default function ServerApp() {
     content = <section className="sam-home sam-home-returning">
       <div className="sam-hero-copy"><span className="sam-eyebrow"><i /> سمكرو · رجعت تاني</span><h1>جاهزين لسؤال؟<br /><em>هات الشلة.</em></h1><p>اعملوا غرفة أو ادخلوا برمز صاحبكم. نشوف مين هيقرب أكتر!</p><div className="sam-hero-art" aria-hidden="true"><span className="sam-art-index">سؤال جديد</span><span className="sam-art-number">؟</span><span className="sam-art-answer">قدّرها صح</span><span className="sam-art-stamp">قريب؟</span></div></div>
       <div className="sam-home-actions">
-        <SurfaceCard className="sam-action-card sam-create-card"><span className="sam-action-icon">١</span><span className="sam-eyebrow">إنت صاحب السؤال</span><h2>اعمل غرفة</h2><p>لمّ أصحابك وابدأوا اللعب سوا.</p><ActionButton disabled={busy} onClick={() => void createRoom()}>{busy ? 'بنجهّز الغرفة…' : 'اعمل غرفة جديدة'} <span aria-hidden="true">←</span></ActionButton></SurfaceCard>
-        <SurfaceCard className="sam-action-card"><span className="sam-action-icon orange">٢</span><span className="sam-eyebrow">معاك رمز؟</span><h2>ادخل الغرفة</h2><p>اكتب الرمز اللي بعتهولك صاحبك.</p><form className="sam-form" onSubmit={joinRoom}><label htmlFor="room-code">رمز الغرفة</label><input id="room-code" dir="ltr" value={roomCode} onChange={(event) => setRoomCode(event.target.value.toUpperCase().replace(/\s/g, ''))} maxLength={10} autoComplete="off" required placeholder="مثال: ABC123" /><ActionButton type="submit" disabled={busy || roomCode.length < 6}>{busy ? 'بندخّلك الغرفة…' : 'ادخل الغرفة'} <span aria-hidden="true">←</span></ActionButton></form></SurfaceCard>
+        <SurfaceCard className="sam-action-card sam-create-card"><span className="sam-action-icon"><Icon name="users" /></span><span className="sam-eyebrow">إنت صاحب السؤال</span><h2>اعمل غرفة</h2><p>لمّ أصحابك وابدأوا اللعب سوا.</p><ActionButton disabled={busy} onClick={() => void createRoom()}>{busy ? 'بنجهّز الغرفة…' : 'اعمل غرفة جديدة'} <span aria-hidden="true">←</span></ActionButton></SurfaceCard>
+        <SurfaceCard className="sam-action-card"><span className="sam-action-icon orange"><Icon name="copy" /></span><span className="sam-eyebrow">معاك رمز؟</span><h2>ادخل الغرفة</h2><p>اكتب الرمز اللي بعتهولك صاحبك.</p><form className="sam-form" onSubmit={joinRoom}><label htmlFor="room-code">رمز الغرفة</label><input id="room-code" dir="ltr" value={roomCode} onChange={(event) => setRoomCode(event.target.value.toUpperCase().replace(/\s/g, ''))} maxLength={10} autoComplete="off" required placeholder="مثال: ABC123" /><ActionButton type="submit" disabled={busy || roomCode.length < 6}>{busy ? 'بندخّلك الغرفة…' : 'ادخل الغرفة'} <span aria-hidden="true">←</span></ActionButton></form></SurfaceCard>
       </div>
       <footer className="sam-founder"><bdi lang="en" dir="ltr">Developed by Mohamed Semary</bdi><i aria-hidden="true">✳</i></footer>
     </section>
@@ -533,6 +566,7 @@ export default function ServerApp() {
 
   return <div data-mode="server" dir="rtl">
     <AppShell activeTab={tab} onNavigate={(nextTab) => { if (nextTab !== 'lobby' || room) setTab(nextTab) }} chips={0} showNav={Boolean(player && !gameReady)} showWallet={false} modeLabel={connected ? 'متصل بالغرفة' : 'لعبة الأصحاب'} playerLabel={player?.name ?? 'ضيف'} footerLabel="لعبة تخمين بين الأصحاب">
+      {!browserOnline && <div className="sam-offline-banner" role="status"><Icon name="wifi" /><span><strong>أنت غير متصل بالإنترنت</strong><small>اللعب الجماعي يحتاج اتصالاً. هنرجع نزامن الغرفة أول ما الشبكة ترجع.</small></span>{room && <ActionButton tone="quiet" onClick={() => setRoomConnectionAttempt((attempt) => attempt + 1)}>حاول تاني</ActionButton>}</div>}
       {error && <div className="sam-error-banner" role="alert"><span>{error}</span><button onClick={() => setError('')} aria-label="إغلاق">×</button></div>}
       {notice && <div className="sam-toast" role="status">{notice}</div>}
       {content}

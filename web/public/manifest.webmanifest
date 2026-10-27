@@ -1,0 +1,16 @@
+{
+  "id": "/",
+  "name": "سمكرو | Samkaro",
+  "short_name": "سمكرو",
+  "description": "لعبة التخمين والتلميح بين الأصدقاء",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#101215",
+  "theme_color": "#101215",
+  "icons": [
+    { "src": "/assets/app-logo.png", "sizes": "768x768", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

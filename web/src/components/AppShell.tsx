@@ -1,12 +1,14 @@
 import type { PropsWithChildren } from 'react'
 import type { NavigationTab } from '../domain/types'
 import { ActionButton } from './ActionButton'
+import { Icon } from './Icon'
+import { InstallExperience } from './InstallExperience'
 
-const navItems: { id: NavigationTab; label: string; icon: string }[] = [
-  { id: 'home', label: 'الرئيسية', icon: '٠١' },
-  { id: 'lobby', label: 'الغرفة', icon: '٠٢' },
-  { id: 'leaderboard', label: 'النتيجة', icon: '٠٣' },
-  { id: 'profile', label: 'ملفي', icon: '٠٤' },
+const navItems: { id: NavigationTab; label: string; icon: 'home' | 'users' | 'trophy' | 'user' }[] = [
+  { id: 'home', label: 'الرئيسية', icon: 'home' },
+  { id: 'lobby', label: 'الغرفة', icon: 'users' },
+  { id: 'leaderboard', label: 'النتيجة', icon: 'trophy' },
+  { id: 'profile', label: 'ملفي', icon: 'user' },
 ]
 
 export function AppShell({
@@ -26,6 +28,7 @@ export function AppShell({
     {showNav && <header className="topbar">
       <div className="topbar-inner">
         <button className="brand-lockup" onClick={() => onNavigate('home')} aria-label="سمكرو - الرئيسية">
+          <img src="/assets/app-logo.png" alt="" width="42" height="42" />
           <span><strong>سمكرو</strong><small>لعبة التلميح والتخمين</small></span>
         </button>
         <div className="topbar-actions">
@@ -38,9 +41,10 @@ export function AppShell({
     <main className="main-content">{children}</main>
     {showNav && <nav className="bottom-nav" aria-label="التنقل الرئيسي">
       {navItems.map((item) => <button key={item.id} className={`nav-item ${activeTab === item.id ? 'selected' : ''}`} onClick={() => onNavigate(item.id)} aria-current={activeTab === item.id ? 'page' : undefined}>
-        <span className="nav-icon" aria-hidden="true">{item.icon}</span><span>{item.label}</span>{activeTab === item.id && <i />}
+        <Icon className="nav-icon" name={item.icon} size={20} /><span>{item.label}</span>{activeTab === item.id && <i />}
       </button>)}
     </nav>}
+    {showNav && <InstallExperience />}
     {showNav && <footer className="site-footer"><span>سمكرو · {footerLabel}</span><span>© Samkaro</span></footer>}
   </div>
 }

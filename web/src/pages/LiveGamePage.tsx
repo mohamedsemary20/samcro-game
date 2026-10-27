@@ -47,6 +47,7 @@ export function LiveGamePage({
   const currentRound = publicState.session.roundNumber
   const activeIndex = phases.findIndex((item) => item.id === phase)
   const ownPlayer = publicState.players.find((player) => player.id === currentPlayerId)
+  const currentActor = publicState.players.find((player) => player.id === publicState.session.currentActorId)
   const amountToCall = Math.max(0, (publicState.session.currentBet ?? 0) - (ownPlayer?.currentBet ?? 0))
   const raiseAmount = Math.min(privateState.availableChips, amountToCall + 10)
   const canAct = online && (!serverAuthoritative || isMyTurn)
@@ -114,7 +115,7 @@ export function LiveGamePage({
     <div className="sam-game-layout">
       <section className="sam-game-main">
         <SurfaceCard className="sam-question-card">
-          <div className="sam-question-meta"><span>{publicState.question.category}</span><span className="sam-pot">الرهان <strong><bdi dir="ltr">{publicState.session.pot.toLocaleString('en-US')}</bdi></strong></span></div>
+          <div className="sam-question-meta"><span>{publicState.question.category}</span>{(phase === 'question-betting' || phase === 'final-betting') && <span className={`sam-turn-label ${isMyTurn ? 'mine' : ''}`} aria-live="polite">{isMyTurn ? 'دورك دلوقتي' : currentActor ? `الدور على ${currentActor.name}` : 'مستنيين الدور'}</span>}<span className="sam-pot">الرهان <strong><bdi dir="ltr">{publicState.session.pot.toLocaleString('en-US')}</bdi></strong></span></div>
           <span className="sam-question-kicker">السؤال رقم {currentRound.toLocaleString('ar-EG')}</span>
           <h1>{publicState.question.prompt}</h1>
           {secondsLeft !== null && <div className={`sam-countdown ${secondsLeft <= 8 ? 'urgent' : ''}`} aria-label={`فاضل ${secondsLeft} ثانية`}><span>فاضل</span><strong><bdi>{secondsLeft}</bdi><small>ث</small></strong></div>}
