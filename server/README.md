@@ -33,9 +33,9 @@ The schema is in `prisma/schema.prisma`; migrations add the initial schema and q
 - `src/game/engine.ts`: deterministic game rules independent of Express and Socket.IO.
 - `src/game/gameService.ts`: serializable Prisma state transitions, idempotency, balances, reveal, and payouts.
 - `src/game/chipLedger.ts` and `scoring.ts`: chip policies and exact numeric comparisons.
-- `src/questions/`: repository that selects only enabled questions with approved hints and strips answers from public metadata.
+- `src/questions/`: repository that selects structurally eligible active questions, generates private numeric hints, and strips answers from public metadata.
 - `src/questions/questionBank.ts`: recursive source discovery, conservative normalization, duplicate checks, and audit reports.
-- `src/questions/questionBankImporter.ts`: idempotent serializable import that preserves editorial controls and provenance.
+- `src/questions/questionBankImporter.ts`: idempotent serializable import that preserves source ownership and provenance.
 - `prisma/`: persistence schema, migrations, and disabled development examples.
 - `test/`: deterministic engine, scoring, timing, and chip-policy tests.
 - `../shared/contracts.ts`: public and player-private wire DTOs shared with the web client.
@@ -51,14 +51,14 @@ The schema is in `prisma/schema.prisma`; migrations add the initial schema and q
 - A year uses absolute error. Other numeric answers use percentage error; zero answers score only an exact guess. Tied pots split in stable player-ID order, with remainder chips assigned in that order.
 - If a round ends before guesses can decide it, the pot rolls forward. In round five a pot without a scoring guess goes to the last eligible player in stable player-ID order.
 - The funding window starts before any ante is charged. A loan request is rejected after the window deadline. Players who do not request the loan sit out. If all players still have fewer than 50 chips, the match ends with the carried pot retained and no payout.
-- Each question needs an editor-approved stored hint. Questions without one cannot be selected. Golden Hint stays disabled (`GOLDEN_HINT_PROBABILITY=0`) until its once-per-match scope and selection rule are approved and implemented.
+- Five active questions with structurally safe data are required per match. Player-specific numeric hints are generated privately by the server. Golden Hint stays disabled (`GOLDEN_HINT_PROBABILITY=0`) until its once-per-match scope and selection rule are implemented.
 - The reconnect grace period is 60 seconds. A waiting-room member who remains disconnected past the grace period is removed; an active match retains the participant and times out their decisions.
 
 ## Question data
 
-The preserved source bank is `../web/questions/trivia_clean.json`; its recursive audit, safe normalization, record review, proposed hint review, mapping rules, duplicate policy, and import commands are documented in [docs/question-bank-import.md](docs/question-bank-import.md). The importer adds source provenance and metadata columns using the additive migration `20261023010000_question_bank_provenance`. It imports only valid integer question data with an explicitly approved, complete hint-review record, enables only those approved records, and never converts `source_hint` or a proposed suggestion into a gameplay hint. The existing repository selects only enabled questions with a supported type and approved complete `ApprovedQuestionHint`; the current hint-review artifact has zero approvals, so the playable count remains zero.
+The preserved source bank is `../web/questions/trivia_clean.json`; its structural validation, safe normalization, mapping rules, duplicate policy, and import commands are documented in [docs/question-bank-import.md](docs/question-bank-import.md). The importer preserves stable IDs and provenance, imports supported safe-integer question data idempotently, and activates structurally valid records. `source_hint` remains source metadata; the server generates private numeric hints from answers. Legacy editorial review rows are retained but no longer gate gameplay.
 
-The small examples in `prisma/seed.ts` remain separate, unverified, disabled development data. No answer correctness has been independently verified. Use a controlled editorial workflow to review answers and approve hints; no public endpoint can edit either.
+The small examples in `prisma/seed.ts` remain separate, unverified, disabled development data. Source answers are not independently fact-checked by the application; the authorized gameplay eligibility policy relies on structural validation and retains their original provenance.
 
 ## REST API v1
 
@@ -96,19 +96,18 @@ npm.cmd run questions:import
 
 Run these from `server/`. They require successful dependency installation; migration commands also require a reachable PostgreSQL database. The root `web/README.md` lists frontend validation commands.
 
-For the database-backed lifecycle and full-match test, configure `server/.env` to point specifically to the disposable `samkaro_dev` database and run:
+For the database-backed lifecycle and full-match test, use a disposable local PostgreSQL schema. The integration runner verifies `current_database()` is `samkaro_dev` before making test writes. It runs three independent guest sessions through room creation/joining, readiness, an invalid retry, a successful match start, initial public/private state delivery, reconnect, and all five rounds using imported canonical database questions. Question records remain in the isolated test schema; room, player, and match records created by the test are cleaned up. The regular unit suite skips this database integration test.
 
-```powershell
-npm.cmd run test:integration
-```
+## Question eligibility and production configuration
 
-The test requires `NODE_ENV=development`, the runner-set `SAMKARO_RUN_DB_INTEGRATION=1` flag, and `samkaro_dev`; it checks both the configured database name and `current_database()` before writes. It uses three independent authenticated Socket.IO sessions and the real room/game handlers. With the question pool empty, it verifies `QUESTION_BANK_INCOMPLETE` leaves the host socket connected and the room waiting. The test then injects a fixture-enabled question repository only into its in-process Socket.IO server, inserts five tagged integer questions with synthetic approved hints, and plays all five rounds. It checks reveal events, `game:complete`, standings against persisted ranks, and that every selected question belongs to the fixture set. Cleanup is scoped to the test room, players, and fixture source tag; it does not reset the database or run the production importer. Normal gameplay always uses a repository that excludes these fixtures. The test is skipped by the regular unit-test command.
+`Question.enabled` is the single gameplay eligibility flag. The importer activates structurally valid non-negative safe-integer questions from the canonical bank. The old hint/review table and JSON review artifact are retained as legacy data and no longer block play; the game generates each player's numeric hint privately from the answer.
 
-## Current limitations and next phase
+Apply migrations and import questions only after verifying the database name and host. Production environment values belong in the backend hosting runtime: `NODE_ENV=production`, `COOKIE_SECURE=true`, `TRUSTED_ORIGINS=https://samcro-game.pages.dev`, `SOCKET_PUBLIC_ORIGIN=https://samcro-game.pages.dev`, and `DATABASE_URL` set as a secret for the intended production PostgreSQL database. Leave `SAMKARO_ENABLE_TEST_QUESTION_POOL` unset.
 
-- The server is intentionally a single instance. Before horizontal scaling, add a Socket.IO Redis adapter, shared rate limiting, and a worker/lease mechanism for timed actions.
-- Round engine state and deadlines are persisted, so a restarted process can resume its polling timer, but there is no operator recovery tooling or transaction audit UI.
-- There is no verified answer corpus, moderation interface, chat service, or Golden Hint rule. Golden Hint is disabled; source bank questions remain disabled and unplayable until reviewed hints are approved.
-- The current checkout has passed backend typecheck, build, unit tests, schema validation, migration status, question-bank validation, and three consecutive database-backed full-match integration runs. The production bank still has zero approved playable questions, so normal matches remain correctly blocked until editorial approvals are completed.
+The web deployment settings are documented in `../web/README.md`. Production question import and Pages deployment still require access to the intended production database and Cloudflare Pages project.
 
-The remaining release gate for production gameplay is human verification of answers and explicit approval of at least five complete gameplay hints. The browser room/error scenario still needs a manual browser check because automated browser actions were blocked by this environment's workspace policy.
+## Current limitations
+
+- The server currently runs as a single instance. Horizontal scaling needs a Socket.IO Redis adapter, shared rate limiting, and a worker/lease mechanism for timed actions.
+- There is no admin interface, chat service, or operator recovery tooling. Hints remain server-generated and player-private.
+- The source bank's answers have not been independently re-fact-checked by this application. Structurally valid source records can play under the authorized simplified eligibility policy; source text and provenance are retained.

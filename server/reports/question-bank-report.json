@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-24T23:20:10.643Z",
+  "generatedAt": "2026-10-27T17:51:14.479Z",
   "sourceDirectory": "web/questions",
   "sourceFiles": [
     "web/questions/trivia_clean.json"
@@ -27,8 +27,7 @@
         "confidence": 99,
         "sourceHint": "FIFA World Cup 1930 Uruguay"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_002",
@@ -49,8 +48,7 @@
         "confidence": 98,
         "sourceHint": "1930 World Cup 13 teams"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_003",
@@ -71,8 +69,7 @@
         "confidence": 98,
         "sourceHint": "2022 World Cup 172 goals"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_004",
@@ -93,8 +90,7 @@
         "confidence": 96,
         "sourceHint": "1998 World Cup 171 goals"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_005",
@@ -115,8 +111,7 @@
         "confidence": 99,
         "sourceHint": "Klose all-time WC top scorer"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_006",
@@ -137,8 +132,7 @@
         "confidence": 99,
         "sourceHint": "Just Fontaine 1958 record"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_007",
@@ -159,8 +153,7 @@
         "confidence": 98,
         "sourceHint": "Ronaldo Nazario WC goals"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_008",
@@ -181,8 +174,7 @@
         "confidence": 98,
         "sourceHint": "Gerd Muller 10 WC goals"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_009",
@@ -203,8 +195,7 @@
         "confidence": 97,
         "sourceHint": "Messi record 26 WC appearances"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_010",
@@ -225,8 +216,7 @@
         "confidence": 97,
         "sourceHint": "Hakan Sukur 11 seconds 2002"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_011",
@@ -247,8 +237,7 @@
         "confidence": 98,
         "sourceHint": "Roger Milla 1994 oldest scorer"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_012",
@@ -269,8 +258,7 @@
         "confidence": 99,
         "sourceHint": "Egypt first WC Italy 1934"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_013",
@@ -291,8 +279,7 @@
         "confidence": 99,
         "sourceHint": "Salah 2017-18 PL 32 goals"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_014",
@@ -313,8 +300,7 @@
         "confidence": 99,
         "sourceHint": "Shearer PL record 260"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_015",
@@ -335,8 +321,7 @@
         "confidence": 99,
         "sourceHint": "Arsenal Invincibles 49 unbeaten"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_016",
@@ -357,8 +342,7 @@
         "confidence": 99,
         "sourceHint": "Real Madrid 15 European Cups by 2024"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_017",
@@ -379,8 +363,7 @@
         "confidence": 98,
         "sourceHint": "Messi 91 goals in 2012 Guinness"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_018",
@@ -401,8 +384,7 @@
         "confidence": 98,
         "sourceHint": "Ballon d'Or first 1956 Stanley Matthews"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_019",
@@ -423,8 +405,7 @@
         "confidence": 97,
         "sourceHint": "Ronaldo Euro all-time 14"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_020",
@@ -445,8 +426,7 @@
         "confidence": 98,
         "sourceHint": "First European Championship 1960"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_021",
@@ -467,8 +447,7 @@
         "confidence": 94,
         "sourceHint": "Argentina 16 Copa America titles by 2024"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_022",
@@ -489,8 +468,7 @@
         "confidence": 95,
         "sourceHint": "Al Ahly 12th CAF CL title 2024"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_023",
@@ -511,8 +489,7 @@
         "confidence": 93,
         "sourceHint": "Cairo International Stadium opened 1960"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_024",
@@ -533,8 +510,7 @@
         "confidence": 99,
         "sourceHint": "Al Ahly founded 1907"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_025",
@@ -555,8 +531,7 @@
         "confidence": 99,
         "sourceHint": "FIFA founded Paris 1904"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_026",
@@ -577,8 +552,7 @@
         "confidence": 98,
         "sourceHint": "IFAB Laws of the Game 17 laws"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_028",
@@ -599,8 +573,7 @@
         "confidence": 97,
         "sourceHint": "Penalty kick introduced 1891"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_029",
@@ -621,8 +594,7 @@
         "confidence": 98,
         "sourceHint": "Cards introduced at 1970 World Cup"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_030",
@@ -643,8 +615,7 @@
         "confidence": 98,
         "sourceHint": "Goal-line technology Brazil 2014"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_031",
@@ -665,8 +636,7 @@
         "confidence": 99,
         "sourceHint": "VAR first used Russia 2018"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_032",
@@ -687,8 +657,7 @@
         "confidence": 97,
         "sourceHint": "Back-pass rule introduced 1992"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_033",
@@ -709,8 +678,7 @@
         "confidence": 97,
         "sourceHint": "Hungary 10-1 El Salvador 1982"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_034",
@@ -731,8 +699,7 @@
         "confidence": 99,
         "sourceHint": "Austria 7-5 Switzerland 1954"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_035",
@@ -753,8 +720,7 @@
         "confidence": 99,
         "sourceHint": "Premier League founded 1992"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_036",
@@ -775,8 +741,7 @@
         "confidence": 98,
         "sourceHint": "Bundesliga founded 1963"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_037",
@@ -797,8 +762,7 @@
         "confidence": 98,
         "sourceHint": "La Liga first season 1929"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_038",
@@ -819,8 +783,7 @@
         "confidence": 96,
         "sourceHint": "Wembley Stadium 90,000 seats"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_039",
@@ -841,8 +804,7 @@
         "confidence": 99,
         "sourceHint": "Man City 100 points 2017-18"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_040",
@@ -863,8 +825,7 @@
         "confidence": 99,
         "sourceHint": "Derby County 11 points 2007-08"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_041",
@@ -885,8 +846,7 @@
         "confidence": 98,
         "sourceHint": "Real Madrid 2011-12 121 goals"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_042",
@@ -907,8 +867,7 @@
         "confidence": 97,
         "sourceHint": "Messi 73 goals 2011-12"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_043",
@@ -929,8 +888,7 @@
         "confidence": 98,
         "sourceHint": "Ronaldo 140 UCL goals"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_044",
@@ -951,8 +909,7 @@
         "confidence": 94,
         "sourceHint": "Messi 129 UCL goals"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_045",
@@ -973,8 +930,7 @@
         "confidence": 99,
         "sourceHint": "Lev Yashin Ballon d'Or 1963"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_046",
@@ -995,8 +951,7 @@
         "confidence": 99,
         "sourceHint": "Mbappe 4 in 2018 + 8 in 2022"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_047",
@@ -1017,8 +972,7 @@
         "confidence": 97,
         "sourceHint": "Mbappe born Dec 1998, final July 2018"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_048",
@@ -1039,8 +993,7 @@
         "confidence": 98,
         "sourceHint": "Ferguson Nov 1986 to May 2013"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_049",
@@ -1061,8 +1014,7 @@
         "confidence": 99,
         "sourceHint": "Ferguson 13 Premier League titles"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_050",
@@ -1083,8 +1035,7 @@
         "confidence": 98,
         "sourceHint": "Wenger Oct 1996 to May 2018"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_051",
@@ -1105,8 +1056,7 @@
         "confidence": 96,
         "sourceHint": "Casillas 167 caps Spain"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_052",
@@ -1127,8 +1077,7 @@
         "confidence": 94,
         "sourceHint": "Sergio Ramos 180 caps Spain"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_053",
@@ -1149,8 +1098,7 @@
         "confidence": 94,
         "sourceHint": "Ahmed Hassan 184 caps Egypt"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_054",
@@ -1171,8 +1119,7 @@
         "confidence": 98,
         "sourceHint": "El-Hadary 45 years 161 days"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_055",
@@ -1193,8 +1140,7 @@
         "confidence": 96,
         "sourceHint": "Gareth Barry PL appearances 653"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_056",
@@ -1215,8 +1161,7 @@
         "confidence": 99,
         "sourceHint": "Haaland 36 PL goals 2022-23"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_057",
@@ -1237,8 +1182,7 @@
         "confidence": 99,
         "sourceHint": "Dixie Dean 60 league goals 1927-28"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_058",
@@ -1259,8 +1203,7 @@
         "confidence": 96,
         "sourceHint": "Messi 672 Barcelona goals"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_059",
@@ -1281,8 +1224,7 @@
         "confidence": 95,
         "sourceHint": "Ronaldo 450 Real Madrid goals"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_060",
@@ -1303,8 +1245,7 @@
         "confidence": 97,
         "sourceHint": "Kocsis 11 goals 1954 World Cup"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_061",
@@ -1325,8 +1266,7 @@
         "confidence": 98,
         "sourceHint": "Neymar 222m euro release clause 2017"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_062",
@@ -1347,8 +1287,7 @@
         "confidence": 96,
         "sourceHint": "Zidane red card 110th minute 2006"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_063",
@@ -1369,8 +1308,7 @@
         "confidence": 99,
         "sourceHint": "22 World Cups by 2022"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_064",
@@ -1391,8 +1329,7 @@
         "confidence": 96,
         "sourceHint": "Argentina 36-match unbeaten run"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_065",
@@ -1413,8 +1350,7 @@
         "confidence": 96,
         "sourceHint": "Italy 37 unbeaten until Sept 2021"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_067",
@@ -1435,8 +1371,7 @@
         "confidence": 97,
         "sourceHint": "Real Madrid 36 La Liga titles by 2024"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_068",
@@ -1457,8 +1392,7 @@
         "confidence": 94,
         "sourceHint": "Barcelona 27 La Liga titles by 2023"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_069",
@@ -1479,8 +1413,7 @@
         "confidence": 97,
         "sourceHint": "Liverpool 19th league title 2019-20"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_070",
@@ -1501,8 +1434,7 @@
         "confidence": 97,
         "sourceHint": "Iniesta 116th minute 2010 final"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_071",
@@ -1523,8 +1455,7 @@
         "confidence": 97,
         "sourceHint": "Gotze 113th minute 2014 final"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_072",
@@ -1545,8 +1476,7 @@
         "confidence": 94,
         "sourceHint": "Salah 95th minute penalty vs Congo"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_073",
@@ -1567,8 +1497,7 @@
         "confidence": 98,
         "sourceHint": "Chelsea 2004-05 conceded 15"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_074",
@@ -1589,8 +1518,7 @@
         "confidence": 98,
         "sourceHint": "Man City 106 goals 2017-18"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_075",
@@ -1611,8 +1539,7 @@
         "confidence": 96,
         "sourceHint": "Puskas 84 goals in 85 matches"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_076",
@@ -1633,8 +1560,7 @@
         "confidence": 99,
         "sourceHint": "Euro 2016 first with 24 teams"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_077",
@@ -1655,8 +1581,7 @@
         "confidence": 99,
         "sourceHint": "First Women's World Cup China 1991"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_078",
@@ -1677,8 +1602,7 @@
         "confidence": 94,
         "sourceHint": "Marta 17 Women's World Cup goals"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_079",
@@ -1699,8 +1623,7 @@
         "confidence": 99,
         "sourceHint": "Saudi Arabia first WC USA 1994"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_080",
@@ -1721,8 +1644,7 @@
         "confidence": 99,
         "sourceHint": "First AFCON Sudan 1957 Egypt winner"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_081",
@@ -1743,8 +1665,7 @@
         "confidence": 99,
         "sourceHint": "Brazil all 22 World Cups"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "football_082",
@@ -1765,8 +1686,7 @@
         "confidence": 95,
         "sourceHint": "Henry 228 Arsenal goals"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_001",
@@ -1787,8 +1707,7 @@
         "confidence": 90,
         "sourceHint": "Layali El Helmeya part 1 Ramadan 1987"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_002",
@@ -1809,8 +1728,7 @@
         "confidence": 92,
         "sourceHint": "Lan A3eesh Fi Galbab Abi 1996"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_003",
@@ -1831,8 +1749,7 @@
         "confidence": 90,
         "sourceHint": "Arabesque series 1994"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_004",
@@ -1853,8 +1770,7 @@
         "confidence": 90,
         "sourceHint": "Yawmiyat Wanis first part 1994"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_005",
@@ -1875,8 +1791,7 @@
         "confidence": 90,
         "sourceHint": "Dameer Abla Hekmat 1991"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_006",
@@ -1897,8 +1812,7 @@
         "confidence": 90,
         "sourceHint": "Zizinia part 1 1997"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_007",
@@ -1919,8 +1833,7 @@
         "confidence": 92,
         "sourceHint": "Umm Kulthum series 1999 Sabreen"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_008",
@@ -1941,8 +1854,7 @@
         "confidence": 96,
         "sourceHint": "Al-Taghribah al-Filastiniyah 2004"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_009",
@@ -1963,8 +1875,7 @@
         "confidence": 90,
         "sourceHint": "Taghribah 31 episodes"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_010",
@@ -1985,8 +1896,7 @@
         "confidence": 97,
         "sourceHint": "Bab Al-Hara season 1 2006"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_011",
@@ -2007,8 +1917,7 @@
         "confidence": 92,
         "sourceHint": "Al-Zeer Salem 2000"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_012",
@@ -2029,8 +1938,7 @@
         "confidence": 92,
         "sourceHint": "Saqr Quraish 2002"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_013",
@@ -2051,8 +1959,7 @@
         "confidence": 91,
         "sourceHint": "Rabee Qurtuba 2003"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_014",
@@ -2073,8 +1980,7 @@
         "confidence": 97,
         "sourceHint": "El Gama'a part 1 Ramadan 2010"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_015",
@@ -2095,8 +2001,7 @@
         "confidence": 94,
         "sourceHint": "El Gama'a 2 Ramadan 2017"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_016",
@@ -2117,8 +2022,7 @@
         "confidence": 98,
         "sourceHint": "Al Ikhtiyar Ramadan 2020"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_017",
@@ -2139,8 +2043,7 @@
         "confidence": 97,
         "sourceHint": "Al Ikhtiyar 2 Ramadan 2021"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_018",
@@ -2161,8 +2064,7 @@
         "confidence": 96,
         "sourceHint": "Al Ikhtiyar 3 Ramadan 2022"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_019",
@@ -2183,8 +2085,7 @@
         "confidence": 93,
         "sourceHint": "El Prince Ramadan 2020"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_020",
@@ -2205,8 +2106,7 @@
         "confidence": 95,
         "sourceHint": "El Ostoura Ramadan 2016"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_021",
@@ -2227,8 +2127,7 @@
         "confidence": 95,
         "sourceHint": "Kalabsh Ramadan 2017"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_022",
@@ -2249,8 +2148,7 @@
         "confidence": 92,
         "sourceHint": "Kalabsh 3 Ramadan 2019"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_023",
@@ -2271,8 +2169,7 @@
         "confidence": 92,
         "sourceHint": "El Arraf Ramadan 2013 Adel Imam"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_024",
@@ -2293,8 +2190,7 @@
         "confidence": 94,
         "sourceHint": "Fergat Nagy Atallah Ramadan 2012"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_025",
@@ -2315,8 +2211,7 @@
         "confidence": 94,
         "sourceHint": "Khawaga Abdel Qader Ramadan 2012"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_026",
@@ -2337,8 +2232,7 @@
         "confidence": 96,
         "sourceHint": "Omar series Ramadan 2012"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_027",
@@ -2359,8 +2253,7 @@
         "confidence": 90,
         "sourceHint": "Omar series 30 episodes"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_028",
@@ -2381,8 +2274,7 @@
         "confidence": 90,
         "sourceHint": "Daya'a Daya'a 2008"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_029",
@@ -2403,8 +2295,7 @@
         "confidence": 93,
         "sourceHint": "Al-Malik Farouk Ramadan 2007"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_030",
@@ -2425,8 +2316,7 @@
         "confidence": 91,
         "sourceHint": "Asmahan series 2008"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_031",
@@ -2447,8 +2337,7 @@
         "confidence": 90,
         "sourceHint": "Khalid ibn al-Walid series 2006"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_032",
@@ -2469,8 +2358,7 @@
         "confidence": 91,
         "sourceHint": "Ailat El Hag Metwalli 2001"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_033",
@@ -2491,8 +2379,7 @@
         "confidence": 94,
         "sourceHint": "Gafaar El Omda Ramadan 2023"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_034",
@@ -2513,8 +2400,7 @@
         "confidence": 93,
         "sourceHint": "Musa Ramadan 2021"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_035",
@@ -2535,8 +2421,7 @@
         "confidence": 90,
         "sourceHint": "Lo'bet Newton Ramadan 2021"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_036",
@@ -2557,8 +2442,7 @@
         "confidence": 90,
         "sourceHint": "El Maddah season 1 Ramadan 2021"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_037",
@@ -2579,8 +2463,7 @@
         "confidence": 92,
         "sourceHint": "El Kabeer Awi first aired Ramadan 2010"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_038",
@@ -2601,8 +2484,7 @@
         "confidence": 92,
         "sourceHint": "Zat series Ramadan 2013"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_039",
@@ -2623,8 +2505,7 @@
         "confidence": 92,
         "sourceHint": "Taht El Saytara Ramadan 2015"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_040",
@@ -2645,8 +2526,7 @@
         "confidence": 90,
         "sourceHint": "Segn El Nesa Ramadan 2014"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_041",
@@ -2667,8 +2547,7 @@
         "confidence": 97,
         "sourceHint": "El Hashasheen Ramadan 2024"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_042",
@@ -2689,8 +2568,7 @@
         "confidence": 92,
         "sourceHint": "El Hashasheen 30 episodes"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_043",
@@ -2711,8 +2589,7 @@
         "confidence": 94,
         "sourceHint": "Hassan-i Sabbah took Alamut 1090"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_044",
@@ -2733,8 +2610,7 @@
         "confidence": 92,
         "sourceHint": "Hassan-i Sabbah died 1124"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_045",
@@ -2755,8 +2631,7 @@
         "confidence": 92,
         "sourceHint": "Fall of Alamut 1256"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_046",
@@ -2777,8 +2652,7 @@
         "confidence": 94,
         "sourceHint": "Abd al-Rahman I reached Al-Andalus 755"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_047",
@@ -2799,8 +2673,7 @@
         "confidence": 92,
         "sourceHint": "Al-Mansur ibn Abi Amir died 1002"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_048",
@@ -2821,8 +2694,7 @@
         "confidence": 97,
         "sourceHint": "Asmahan died 1944"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_049",
@@ -2843,8 +2715,7 @@
         "confidence": 90,
         "sourceHint": "Maraya first aired 1981"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_050",
@@ -2865,8 +2736,7 @@
         "confidence": 90,
         "sourceHint": "Tash Ma Tash began 1993"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_051",
@@ -2887,8 +2757,7 @@
         "confidence": 90,
         "sourceHint": "Iftah Ya Simsim premiered 1979 Kuwait"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_052",
@@ -2909,8 +2778,7 @@
         "confidence": 97,
         "sourceHint": "Adel Imam born 1940"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_053",
@@ -2931,8 +2799,7 @@
         "confidence": 92,
         "sourceHint": "Yehia El-Fakharany born 1945"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_054",
@@ -2953,8 +2820,7 @@
         "confidence": 96,
         "sourceHint": "Nour El-Sherif born 1946"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_055",
@@ -2975,8 +2841,7 @@
         "confidence": 95,
         "sourceHint": "Mahmoud Abdel Aziz born 1946"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_056",
@@ -2997,8 +2862,7 @@
         "confidence": 96,
         "sourceHint": "Ahmed Zaki born 1949"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_057",
@@ -3019,8 +2883,7 @@
         "confidence": 94,
         "sourceHint": "Yousra born 1955"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_058",
@@ -3041,8 +2904,7 @@
         "confidence": 93,
         "sourceHint": "Elham Shahin born 1960"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_059",
@@ -3063,8 +2925,7 @@
         "confidence": 93,
         "sourceHint": "Laila Elwi born 1962"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_060",
@@ -3085,8 +2946,7 @@
         "confidence": 94,
         "sourceHint": "Mona Zaki born 1976"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_061",
@@ -3107,8 +2967,7 @@
         "confidence": 93,
         "sourceHint": "Nelly Karim born 1974"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_062",
@@ -3129,8 +2988,7 @@
         "confidence": 97,
         "sourceHint": "Mohamed Ramadan born 1988"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_063",
@@ -3151,8 +3009,7 @@
         "confidence": 93,
         "sourceHint": "Ahmed El-Sakka born 1973"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_064",
@@ -3173,8 +3030,7 @@
         "confidence": 93,
         "sourceHint": "Karim Abdel Aziz born 1975"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_065",
@@ -3195,8 +3051,7 @@
         "confidence": 92,
         "sourceHint": "Hend Sabry born 1979"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_066",
@@ -3217,8 +3072,7 @@
         "confidence": 94,
         "sourceHint": "Ahmed Helmy born 1969"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_067",
@@ -3239,8 +3093,7 @@
         "confidence": 95,
         "sourceHint": "Duraid Lahham born 1934"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_068",
@@ -3261,8 +3114,7 @@
         "confidence": 91,
         "sourceHint": "Jamal Suleiman born 1959"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_069",
@@ -3283,8 +3135,7 @@
         "confidence": 97,
         "sourceHint": "Faten Hamama born 1931"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_070",
@@ -3305,8 +3156,7 @@
         "confidence": 95,
         "sourceHint": "Mahmoud Yassin born 1941"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_071",
@@ -3327,8 +3177,7 @@
         "confidence": 95,
         "sourceHint": "Samir Ghanem born 1937"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_072",
@@ -3349,8 +3198,7 @@
         "confidence": 93,
         "sourceHint": "Hussein Fahmy born 1940"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_073",
@@ -3371,8 +3219,7 @@
         "confidence": 94,
         "sourceHint": "Mohamed Sobhi born 1948"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_074",
@@ -3393,8 +3240,7 @@
         "confidence": 93,
         "sourceHint": "Salah El-Saadany born 1943"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_075",
@@ -3415,8 +3261,7 @@
         "confidence": 98,
         "sourceHint": "Nour El-Sherif died Aug 2015"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_076",
@@ -3437,8 +3282,7 @@
         "confidence": 98,
         "sourceHint": "Mahmoud Abdel Aziz died Nov 2016"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_077",
@@ -3459,8 +3303,7 @@
         "confidence": 99,
         "sourceHint": "Ahmed Zaki died Mar 2005"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_078",
@@ -3481,8 +3324,7 @@
         "confidence": 99,
         "sourceHint": "Faten Hamama died Jan 2015"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_079",
@@ -3503,8 +3345,7 @@
         "confidence": 96,
         "sourceHint": "Salah El-Saadany died Jan 2017"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_080",
@@ -3525,8 +3366,7 @@
         "confidence": 97,
         "sourceHint": "Mahmoud Yassin died Oct 2020"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_081",
@@ -3547,8 +3387,7 @@
         "confidence": 97,
         "sourceHint": "Samir Ghanem died May 2021"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_082",
@@ -3569,8 +3408,7 @@
         "confidence": 92,
         "sourceHint": "Dalal Abdel Aziz died Aug 2022"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_083",
@@ -3591,8 +3429,7 @@
         "confidence": 90,
         "sourceHint": "Abdel Moneim Madbouly died 2006"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_084",
@@ -3613,8 +3450,7 @@
         "confidence": 92,
         "sourceHint": "Sanaa Gamil died 2002"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_085",
@@ -3635,8 +3471,7 @@
         "confidence": 92,
         "sourceHint": "Youssef Shaaban died July 2021"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_086",
@@ -3657,8 +3492,7 @@
         "confidence": 92,
         "sourceHint": "Ahmed Ezz born 1971"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_087",
@@ -3679,8 +3513,7 @@
         "confidence": 92,
         "sourceHint": "Sherihan born 1964"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_088",
@@ -3701,8 +3534,7 @@
         "confidence": 94,
         "sourceHint": "Raya and Sakina executed Dec 1921"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     },
     {
       "id": "series_089",
@@ -3723,8 +3555,7 @@
         "confidence": 90,
         "sourceHint": "Fouad El-Mohandes died Sept 2006"
       },
-      "approvedHint": null,
-      "playable": false
+      "playable": true
     }
   ],
   "rejectedRecords": [
@@ -4357,9 +4188,13 @@
     "number-decimal": 2,
     "number-integer": 169
   },
-  "missingHintCount": 171,
-  "playableCount": 0,
+  "playableCount": 169,
   "invalidJsonFiles": [],
   "valid": true,
-  "databaseImport": null
+  "databaseImport": {
+    "inserted": 0,
+    "updated": 0,
+    "skipped": 169,
+    "rejected": 2
+  }
 }

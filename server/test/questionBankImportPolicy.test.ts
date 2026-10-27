@@ -17,13 +17,12 @@ describe('question import policy', () => {
       sourceRecordIndex: record.sourceRecordIndex,
       metadata: record.metadata,
       enabled: false,
-      hint: null,
     }
     expect(planQuestionImport([record], []).map(({ kind }) => kind)).toEqual(['insert'])
     expect(planQuestionImport([record], [existing]).map(({ kind }) => kind)).toEqual(['skip'])
 
     const changed = { ...record, answer: record.answer + 1 }
-    expect(planQuestionImport([changed], [existing])).toMatchObject([{ kind: 'update', revokeHintApproval: true }])
+    expect(planQuestionImport([changed], [existing])).toMatchObject([{ kind: 'update' }])
   })
 
   it('refuses to overwrite a same-ID question owned by another source', async () => {
@@ -31,7 +30,7 @@ describe('question import policy', () => {
     const existing: ExistingQuestionForImport = {
       id: record.id, promptAr: record.promptAr, answer: BigInt(record.answer), category: record.category,
       type: record.type, difficulty: record.difficulty, source: record.source,
-      sourceFile: 'manual-editor-entry', sourceRecordIndex: 0, metadata: {}, enabled: true, hint: null,
+      sourceFile: 'manual-editor-entry', sourceRecordIndex: 0, metadata: {}, enabled: true,
     }
     expect(planQuestionImport([record], [existing])).toMatchObject([{ kind: 'conflict', reason: 'stable-id-owned-by-another-source' }])
   })

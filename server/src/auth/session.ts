@@ -48,7 +48,7 @@ export function setSessionCookie(
     `${env.COOKIE_NAME}=${encodeURIComponent(token)}`,
     'Path=/',
     'HttpOnly',
-    'SameSite=None',
+    'SameSite=Lax',
     `Max-Age=${Math.floor(maxAge / 1000)}`,
   ]
 
@@ -64,7 +64,7 @@ export function clearSessionCookie(response: Response): void {
     `${env.COOKIE_NAME}=`,
     'Path=/',
     'HttpOnly',
-    'SameSite=None',
+    'SameSite=Lax',
     'Max-Age=0',
   ]
 

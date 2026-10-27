@@ -6,7 +6,7 @@ import WebSocket from 'ws'
 import type { Prisma, PrismaClient } from '@prisma/client'
 import type { Server as SocketServer } from 'socket.io'
 import type { PlayerHint, PrivatePlayerState, PublicGameState, RoundResult } from '../../../shared/contracts.js'
-import { importLocalTestQuestionPool, LOCAL_TEST_QUESTION_SOURCE } from '../../src/questions/localTestQuestionPool.js'
+import type { QuestionRepository } from '../../src/questions/questionRepository.js'
 
 interface RoomDto {
   id: string
@@ -158,7 +158,7 @@ const shouldRun = process.env.SAMKARO_RUN_DB_INTEGRATION === '1'
 const suite = describe.skipIf(!shouldRun)
 
 suite('PostgreSQL-backed REST and Socket.IO room lifecycle', () => {
-  it('plays a complete three-player match from the isolated formula-hint bank pool', async () => {
+  it('plays a complete three-player match from active PostgreSQL question-bank records', async () => {
     expect(process.env.SAMKARO_RUN_DB_INTEGRATION).toBe('1')
     const configuredUrl = process.env.DATABASE_URL
     expect(configuredUrl, 'test:integration must load server/.env').toBeTruthy()
@@ -166,15 +166,15 @@ suite('PostgreSQL-backed REST and Socket.IO room lifecycle', () => {
     expect(configuredDatabase).toBe('samkaro_dev')
     expect(process.env.NODE_ENV).toBe('development')
     expect(process.env.SAMKARO_RUN_DB_INTEGRATION).toBe('1')
-    expect(process.env.SAMKARO_ENABLE_TEST_QUESTION_POOL).toBe('1')
+    expect(process.env.SAMKARO_ENABLE_TEST_QUESTION_POOL).toBeUndefined()
 
-    const [{ app }, { prisma }, { attachSocketServer }, { PrismaQuestionRepository }, { NoApprovedQuestionsError }] = await Promise.all([
+    const [{ app }, { prisma }, { attachSocketServer }, questionRepositoryModule] = await Promise.all([
       import('../../src/http/app.js'),
       import('../../src/db/prisma.js'),
       import('../../src/realtime/socketServer.js'),
       import('../../src/questions/questionRepository.js'),
-      import('../../src/questions/questionRepository.js'),
     ])
+    const { PrismaQuestionRepository, NoEligibleQuestionsError } = questionRepositoryModule
 
     const db = prisma as PrismaClient
     const connectedDatabase = await db.$queryRaw<Array<{ database_name: string }>>`SELECT current_database() AS database_name`
@@ -187,41 +187,38 @@ suite('PostgreSQL-backed REST and Socket.IO room lifecycle', () => {
     expect(staleFixtures, 'refusing to modify pre-existing integration fixture rows').toHaveLength(0)
     const playableQuestionCount = await db.question.count({
       where: {
+        sourceFile: 'web/questions/trivia_clean.json',
         enabled: true,
         type: { in: ['year', 'number'] },
         answer: { gte: 0n, lte: BigInt(Number.MAX_SAFE_INTEGER) },
-        hint: { is: { approved: true, range: { not: '' }, accuracy: { not: '' }, note: { not: '' } } },
       },
     })
-    expect(playableQuestionCount).toBe(0)
-
-    const firstImport = await importLocalTestQuestionPool(db)
-    const secondImport = await importLocalTestQuestionPool(db)
-    expect(firstImport.inserted + firstImport.skipped).toBe(169)
-    expect(firstImport.eligible).toBe(169)
-    expect(secondImport).toEqual({ inserted: 0, skipped: 169, eligible: 169 })
-    const testPoolRows = await db.question.findMany({
-      where: { sourceFile: LOCAL_TEST_QUESTION_SOURCE, enabled: true },
-      select: { id: true, metadata: true, hint: { select: { approved: true, range: true, accuracy: true, note: true, source: true } } },
-    })
-    expect(testPoolRows).toHaveLength(169)
-    expect(testPoolRows.every((row) => row.id && row.metadata && typeof row.metadata === 'object' && !Array.isArray(row.metadata)
-      && row.metadata.testOnly === true && row.metadata.testPool === LOCAL_TEST_QUESTION_SOURCE
-      && row.hint?.approved === false && row.hint.source === 'local-test-pool:formula-hint-v1'
-      && row.hint.range.length > 0 && row.hint.accuracy.length > 0 && row.hint.note.length > 0)).toBe(true)
+    expect(playableQuestionCount).toBeGreaterThanOrEqual(5)
     const normalRepository = new PrismaQuestionRepository()
-    await expect(db.$transaction((tx) => normalRepository.selectUnused(tx, []))).rejects.toBeInstanceOf(NoApprovedQuestionsError)
-    const questionRepository = new PrismaQuestionRepository({ allowLocalTestPool: true })
+    const questionRepository = normalRepository
     const fiveSelected = await db.$transaction(async (tx) => {
       const selected: string[] = []
       for (let index = 0; index < 5; index += 1) selected.push((await questionRepository.selectUnused(tx, selected)).id)
       return selected
     })
     expect(new Set(fiveSelected).size).toBe(5)
-    expect(fiveSelected.every((id) => testPoolRows.some((row) => row.id === id))).toBe(true)
+    const bankIds = await db.question.findMany({ where: { id: { in: fiveSelected }, sourceFile: 'web/questions/trivia_clean.json' }, select: { id: true } })
+    expect(bankIds).toHaveLength(5)
 
     const httpServer: HttpServer = createServer(app)
-    const io: SocketServer = attachSocketServer(httpServer, { questionRepository })
+    let rejectFirstStartForQuestionBank = true
+    const retryQuestionRepository: QuestionRepository = {
+      selectUnused: async (transaction, usedQuestionIds) => {
+        if (rejectFirstStartForQuestionBank) {
+          rejectFirstStartForQuestionBank = false
+          throw new NoEligibleQuestionsError()
+        }
+        return questionRepository.selectUnused(transaction, usedQuestionIds)
+      },
+      getActiveById: (transaction, questionId) => questionRepository.getActiveById(transaction, questionId),
+      getHintForPlayer: (transaction, questionId, playerId, roundPlayerIds) => questionRepository.getHintForPlayer(transaction, questionId, playerId, roundPlayerIds),
+    }
+    const io: SocketServer = attachSocketServer(httpServer, { questionRepository: retryQuestionRepository })
     const clients: SocketIoTestClient[] = []
     const identities: Array<{ playerId: string; cookie: string; tokenHash: string }> = []
     let roomId: string | undefined
@@ -259,6 +256,8 @@ suite('PostgreSQL-backed REST and Socket.IO room lifecycle', () => {
         const body = await response.json() as { player: { id: string } }
         const setCookie = response.headers.get('set-cookie')
         expect(setCookie).toBeTruthy()
+        expect(setCookie).toContain('HttpOnly')
+        expect(setCookie).toContain('SameSite=Lax')
         const cookie = setCookie!.split(';', 1)[0]!
         const token = decodeURIComponent(cookie.slice(cookie.indexOf('=') + 1))
         const tokenHash = createHash('sha256').update(token).digest('hex')
@@ -295,6 +294,27 @@ suite('PostgreSQL-backed REST and Socket.IO room lifecycle', () => {
         await roomUpdate
       }
 
+      const temporarilyInactivePlayer = identities[2]!
+      await db.roomMember.update({
+        where: { roomId_playerId: { roomId, playerId: temporarilyInactivePlayer.playerId } },
+        data: { leftAt: new Date() },
+      })
+      expect(await db.roomMember.count({ where: { roomId, leftAt: null } })).toBe(2)
+      const tooFewPlayersError = clients[0]!.waitFor<SocketError>('server:error', (error) => error.code === 'PLAYERS_NOT_READY')
+      const tooFewPlayersAck = clients[0]!.emitWithAck('match:start', { idempotencyKey: randomUUID() })
+      expect(await tooFewPlayersAck).toMatchObject({ ok: false, error: { code: 'PLAYERS_NOT_READY' } })
+      await tooFewPlayersError
+      await db.roomMember.update({
+        where: { roomId_playerId: { roomId, playerId: temporarilyInactivePlayer.playerId } },
+        data: { leftAt: null },
+      })
+
+      const notReadyError = clients[0]!.waitFor<SocketError>('server:error', (error) => error.code === 'PLAYERS_NOT_READY')
+      const notReadyAck = clients[0]!.emitWithAck('match:start', { idempotencyKey: randomUUID() })
+      expect(await notReadyAck).toMatchObject({ ok: false, error: { code: 'PLAYERS_NOT_READY' } })
+      await notReadyError
+      expect(await db.gameMatch.count({ where: { roomId } })).toBe(0)
+
       for (const identity of identities.slice(1)) {
         const client = clients[identities.indexOf(identity)]!
         const readyUpdate = client.waitFor<RoomDto>('room:state', (state) => state.id === roomId && state.readyPlayerIds.includes(identity.playerId))
@@ -313,11 +333,15 @@ suite('PostgreSQL-backed REST and Socket.IO room lifecycle', () => {
 
       const nonHost = clients[1]!
       const hostOnlyError = nonHost.waitFor<SocketError>('server:error', (error) => error.code === 'HOST_REQUIRED')
-      nonHost.emit('match:start', { idempotencyKey: randomUUID() })
+      const nonHostAck = nonHost.emitWithAck('match:start', { idempotencyKey: randomUUID() })
+      expect(await nonHostAck).toMatchObject({ ok: false, error: { code: 'HOST_REQUIRED' } })
       await hostOnlyError
       expect(await db.gameMatch.count({ where: { roomId } })).toBe(0)
 
-      const started = clients[0]!.waitFor<PublicGameState>('game:state', (state) => state.room.id === roomId && state.session.roundNumber === 1)
+      const startingPublicStates = clients.map((client) => client.waitForNext<PublicGameState>(
+        'game:state', (state) => state.room.id === roomId && state.session.roundNumber === 1,
+      ))
+      const startedRoom = clients.map((client) => client.waitForNext<RoomDto>('room:state', (state) => state.id === roomId && state.status === 'in-progress'))
       const startingPrivateStates = clients.map((client, index) => client.waitForNext<PrivatePlayerState>(
         'player:private', (state) => state.playerId === identities[index]!.playerId,
       ))
@@ -326,8 +350,26 @@ suite('PostgreSQL-backed REST and Socket.IO room lifecycle', () => {
       const revealEvents = Array.from({ length: 5 }, (_, index) =>
         clients[1]!.waitFor<RoundResult>('game:reveal', (result) => result.roundNumber === index + 1),
       )
-      clients[0]!.emit('match:start', { idempotencyKey: randomUUID() })
-      let game = await started
+      const unavailableError = clients[0]!.waitFor<SocketError>('server:error', (error) => error.code === 'QUESTION_BANK_INCOMPLETE')
+      const unavailableAck = clients[0]!.emitWithAck('match:start', { idempotencyKey: randomUUID() })
+      expect(await unavailableAck).toMatchObject({ ok: false, error: { code: 'QUESTION_BANK_INCOMPLETE' } })
+      await unavailableError
+      expect((await request(`/rooms/${roomId}`, { cookie: host.cookie }).then((response) => response.json()) as { room: RoomDto }).room.status).toBe('waiting')
+      expect(await db.gameMatch.count({ where: { roomId } })).toBe(0)
+
+      const startKey = randomUUID()
+      const startAck = clients[0]!.emitWithAck('match:start', { idempotencyKey: startKey })
+      expect(await startAck).toEqual({ ok: true })
+      const initialStates = await Promise.all(startingPublicStates)
+      let game = initialStates[0]!
+      expect(initialStates.every((state) => state.session.questionId === game.session.questionId)).toBe(true)
+      expect(initialStates.every((state) => state.session.phase === 'question-betting')).toBe(true)
+      const startedRooms = await Promise.all(startedRoom)
+      expect(startedRooms.every((state) => state.status === 'in-progress')).toBe(true)
+      expect(await db.gameMatch.count({ where: { roomId, status: 'ACTIVE' } })).toBe(1)
+      expect(await db.gameRound.count({ where: { match: { roomId }, number: 1 } })).toBe(1)
+      expect(await clients[0]!.emitWithAck('match:start', { idempotencyKey: startKey })).toEqual({ ok: true })
+      expect(await db.gameMatch.count({ where: { roomId, status: 'ACTIVE' } })).toBe(1)
       const personalFunding = await Promise.all(startingPrivateStates)
       expect(game.players).toHaveLength(3)
       expect(game.players.every((player) => !('chips' in player))).toBe(true)
@@ -510,8 +552,12 @@ suite('PostgreSQL-backed REST and Socket.IO room lifecycle', () => {
       expect(persistedMatch?.rounds).toHaveLength(5)
       expect(persistedMatch?.questionIds).toHaveLength(5)
       expect(persistedMatch?.participants.every((participant) => participant.finalRank !== null)).toBe(true)
-      expect(persistedMatch?.questionIds.every((id) => testPoolRows.some((row) => row.id === id))).toBe(true)
-      expect(persistedMatch?.rounds.every((round) => testPoolRows.some((row) => row.id === round.questionId))).toBe(true)
+      const persistedBankQuestions = await db.question.findMany({
+        where: { id: { in: persistedMatch?.questionIds ?? [] }, sourceFile: 'web/questions/trivia_clean.json', enabled: true },
+        select: { id: true },
+      })
+      expect(persistedBankQuestions).toHaveLength(5)
+      expect(persistedMatch?.rounds.every((round) => persistedBankQuestions.some((row) => row.id === round.questionId))).toBe(true)
       const persistedRanks = persistedMatch!.participants.map((participant) => ({ playerId: participant.playerId, rank: participant.finalRank! }))
       expect(completion!.map(({ playerId, rank }) => ({ playerId, rank })).sort((left, right) => left.rank - right.rank))
         .toEqual(persistedRanks.sort((left, right) => left.rank - right.rank))

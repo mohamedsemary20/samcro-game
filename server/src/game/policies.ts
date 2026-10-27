@@ -23,6 +23,6 @@ export const GAME_POLICIES = Object.freeze({
   goldenHintProbability: 0,
   goldenHint: 'disabled-until-explicitly-configured',
   earlyFold: 'roll-pot-forward; final-round-last-survivor-wins',
-  hints: 'approved-per-question-only',
+  hints: 'server-generated-private-numeric-per-player',
   reconnectGraceMs: 60_000,
 } as const)

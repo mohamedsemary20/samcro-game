@@ -146,19 +146,16 @@ export function attachSocketServer(httpServer: HttpServer, options: { questionRe
       io.to(`room:${roomId}`).emit('room:state', room)
     }))
 
-    gameSocket.on('match:start', (payload) => void onSocket(gameSocket, 'match:start', async () => {
+    gameSocket.on('match:start', (payload, acknowledge) => void onSocket(gameSocket, 'match:start', async () => {
       idempotencySchema.parse(payload)
       const roomId = gameSocket.data.roomId
       if (!roomId) throw new HttpError(409, 'ROOM_NOT_JOINED', 'Join a room before starting a match.')
       await getRoomForPlayer(roomId, gameSocket.data.playerId)
-      const room = await prisma.room.findUnique({ where: { id: roomId }, select: { hostPlayerId: true, status: true } })
-      if (!room || room.hostPlayerId !== gameSocket.data.playerId) throw new HttpError(403, 'HOST_REQUIRED', 'Only the host can start this match.')
-      if (room.status !== 'WAITING') throw new HttpError(409, 'ROOM_NOT_WAITING', 'This room is not waiting for a match.')
-      const members = await prisma.roomMember.findMany({ where: { roomId, leftAt: null }, select: { isReady: true } })
-      if (members.length < 3 || members.some((member) => !member.isReady)) throw new HttpError(409, 'PLAYERS_NOT_READY', 'At least three players must be ready.')
       await startAuthoritativeMatch(roomId, gameSocket.data.playerId, gameSocket.data.sessionId, payload.idempotencyKey, questionRepository)
+      const roomSnapshot = await getRoomSnapshot(roomId)
+      if (roomSnapshot) io.to(`room:${roomId}`).emit('room:state', roomSnapshot)
       broadcastGame(io, roomId, await getGameSnapshot(roomId, gameSocket.data.playerId))
-    }))
+    }, acknowledge))
 
     gameSocket.on('game:sync', (payload) => void onSocket(gameSocket, 'game:sync', async () => {
       const input = roomIdSchema.parse(payload)

@@ -171,7 +171,7 @@ export interface ClientToServerEvents {
   'room:join': (payload: { roomId: string }) => void
   'room:leave': (payload: { roomId: string }) => void
   'room:ready': (payload: RoomReadyPayload) => void
-  'match:start': (payload: { idempotencyKey: string }) => void
+  'match:start': (payload: { idempotencyKey: string }, acknowledge?: (result: ActionAcknowledgement) => void) => void
   'game:sync': (payload: { roomId: string }) => void
   'game:hint.request': (payload: { idempotencyKey: string }, acknowledge?: (result: ActionAcknowledgement) => void) => void
   'game:loan.request': (payload: { idempotencyKey: string }, acknowledge?: (result: ActionAcknowledgement) => void) => void

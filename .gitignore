@@ -78,3 +78,5 @@ captures/
 .codex-npm-cache/
 .tmp-samkaro-cdp/
 *.log
+!**/.env.*.example
+!web/.env.production

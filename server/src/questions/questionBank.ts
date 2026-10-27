@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { existsSync } from 'node:fs'
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -24,8 +25,7 @@ export interface QuestionBankRecord {
     confidence: number | null
     sourceHint: string | null
   }
-  approvedHint: null
-  playable: false
+  playable: true
 }
 
 export interface BankIssue {
@@ -58,17 +58,28 @@ export interface QuestionBankAudit {
   difficulties: Record<string, number>
   sourceFieldTypes: Record<string, string[]>
   answerFormats: Record<string, number>
-  missingHintCount: number
   playableCount: number
   invalidJsonFiles: Array<{ sourceFile: string; error: string }>
   valid: boolean
 }
 
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..')
+function findRepositoryRoot(startDirectory: string): string {
+  let directory = startDirectory
+  for (let depth = 0; depth < 8; depth += 1) {
+    if (existsSync(path.join(directory, 'web', 'questions'))) return directory
+    const parent = path.dirname(directory)
+    if (parent === directory) break
+    directory = parent
+  }
+  throw new Error('QUESTION_BANK_REPOSITORY_ROOT_NOT_FOUND')
+}
+
+const repoRoot = findRepositoryRoot(path.dirname(fileURLToPath(import.meta.url)))
+const serverRoot = path.join(repoRoot, 'server')
 export const DEFAULT_SOURCE_DIRECTORY = path.join(repoRoot, 'web', 'questions')
-export const DEFAULT_NORMALIZED_FILE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../data/question-bank.normalized.json')
-export const DEFAULT_REPORT_JSON = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../reports/question-bank-report.json')
-export const DEFAULT_REPORT_MARKDOWN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../reports/question-bank-report.md')
+export const DEFAULT_NORMALIZED_FILE = path.join(serverRoot, 'data', 'question-bank.normalized.json')
+export const DEFAULT_REPORT_JSON = path.join(serverRoot, 'reports', 'question-bank-report.json')
+export const DEFAULT_REPORT_MARKDOWN = path.join(serverRoot, 'reports', 'question-bank-report.md')
 
 type UnknownRecord = Record<string, unknown>
 
@@ -220,8 +231,7 @@ function normalizeCandidate(value: unknown, sourceFile: string, collection: stri
       sourceRecordIndex: recordIndex,
       sourceFingerprint: fingerprintSourceRecord(sourceFile, collection, recordIndex, row),
       metadata: { sourceCollection: collection, originalType, unit, topic, confidence: confidence as number | null, sourceHint },
-      approvedHint: null,
-      playable: false,
+      playable: true,
     },
   }
 }
@@ -387,8 +397,7 @@ export async function inspectQuestionBank(sourceDirectory = DEFAULT_SOURCE_DIREC
     difficulties: Object.fromEntries(Object.entries(difficulties).filter(([, count]) => count > 0).sort(([a], [b]) => a.localeCompare(b))),
     sourceFieldTypes: Object.fromEntries([...sourceFieldTypes].sort(([a], [b]) => a.localeCompare(b)).map(([field, types]) => [field, [...types].sort()])),
     answerFormats: Object.fromEntries(Object.entries(answerFormats).sort(([a], [b]) => a.localeCompare(b))),
-    missingHintCount: candidateRecords,
-    playableCount: 0,
+    playableCount: candidates.length,
     invalidJsonFiles,
     valid,
   }
@@ -410,7 +419,7 @@ export function renderQuestionBankReport(audit: QuestionBankAudit, databaseImpor
   const rejectionLines = audit.rejectedRecords.map((record) => `- ${record.id ?? '(no id)'} @ ${record.sourceFile}#${record.collection}[${record.recordIndex}]: ${record.reason}${record.rawAnswer !== undefined ? ` (answer=${JSON.stringify(record.rawAnswer)})` : ''}`).join('\n') || '- None'
   const excludedLines = audit.excludedRecords.reduce<Record<string, number>>((counts, record) => ({ ...counts, [record.reason]: (counts[record.reason] ?? 0) + 1 }), {})
   const importText = databaseImport ? `Inserted: ${databaseImport.inserted}; updated: ${databaseImport.updated}; skipped: ${databaseImport.skipped}; rejected: ${databaseImport.rejected}.` : importError ? `Not imported: ${importError}` : 'Not run.'
-    return `# Samkaro question bank audit\n\nGenerated: ${report.generatedAt}\n\n## Source\n\n- Directory: \`${audit.sourceDirectory}\`\n- Files: ${audit.sourceFiles.length ? audit.sourceFiles.map((file) => `\`${file}\``).join(', ') : 'none'}\n- Total source records: ${audit.totalSourceRecords}\n- Candidate records: ${audit.candidateRecords}\n- Excluded by source bank: ${audit.sourceExcludedRecords}\n\n## Source schema\n\n${fieldLines}\n\n## Answer formats\n\n${answerFormatLines}\n\n## Normalization and eligibility\n\n- Valid normalized records: ${audit.normalizedRecords.length}\n- Rejected candidate records: ${audit.rejectedRecords.length}\n- Missing approved game hints: ${audit.missingHintCount}\n- Playable records: ${audit.playableCount}\n- Database import: ${importText}\n- Invalid JSON/root errors: ${audit.invalidJsonFiles.length}\n- Duplicate IDs: ${audit.duplicateIds.length}\n- Exact duplicate prompts: ${audit.exactDuplicateQuestions.length}\n- Near-duplicate review candidates: ${audit.nearDuplicateQuestions.length}\n\n## Categories\n\n${categoryLines}\n\n## Original types\n\n${typeLines}\n\n## Rejected candidates\n\n${rejectionLines}\n\n## Source-excluded records\n\n${Object.entries(excludedLines).map(([reason, count]) => `- ${reason}: ${count}`).join('\n') || '- None'}\n\n## Near-duplicate candidates\n\n${nearLines}\n\n## Policy\n\n- Stable IDs are preserved. Duplicate IDs are rejected as conflicts; records are never silently merged.\n- Exact prompt duplicates are reported, not deleted. Similarity candidates are editorial review hints, not automatic duplicates.\n- Only integer, non-negative, JavaScript-safe answers map to the existing PostgreSQL \`BigInt\` and scoring rules. Decimal answers are rejected until the game model supports them.\n- Source types \`year\` map to \`year\`; \`count\`, \`measure\`, and \`money_or_large\` map to \`number\`, while the original type and metadata are preserved.\n- \`source_hint\` is preserved as a source note; generated gameplay suggestions remain unapproved drafts and never inherit that source note as a game hint.\n- Only records with complete, source-matched editorial and fact-check approval are enabled for gameplay. Pending, rejected, stale, and incomplete records remain unplayable.\n- Answer correctness has not been independently fact-checked.\n`
+    return `# Samkaro question bank audit\n\nGenerated: ${report.generatedAt}\n\n## Source\n\n- Directory: \`${audit.sourceDirectory}\`\n- Files: ${audit.sourceFiles.length ? audit.sourceFiles.map((file) => `\`${file}\``).join(', ') : 'none'}\n- Total source records: ${audit.totalSourceRecords}\n- Candidate records: ${audit.candidateRecords}\n- Excluded by source bank: ${audit.sourceExcludedRecords}\n\n## Source schema\n\n${fieldLines}\n\n## Answer formats\n\n${answerFormatLines}\n\n## Normalization and eligibility\n\n- Valid normalized records: ${audit.normalizedRecords.length}\n- Rejected candidate records: ${audit.rejectedRecords.length}\n- Structurally eligible records: ${audit.playableCount}\n- Database import: ${importText}\n- Invalid JSON/root errors: ${audit.invalidJsonFiles.length}\n- Duplicate IDs: ${audit.duplicateIds.length}\n- Exact duplicate prompts: ${audit.exactDuplicateQuestions.length}\n- Near-duplicate review candidates: ${audit.nearDuplicateQuestions.length}\n\n## Categories\n\n${categoryLines}\n\n## Original types\n\n${typeLines}\n\n## Rejected candidates\n\n${rejectionLines}\n\n## Source-excluded records\n\n${Object.entries(excludedLines).map(([reason, count]) => `- ${reason}: ${count}`).join('\n') || '- None'}\n\n## Near-duplicate candidates\n\n${nearLines}\n\n## Policy\n\n- Stable IDs are preserved. Duplicate IDs are rejected as conflicts; records are never silently merged.\n- Exact prompt duplicates are reported, not deleted. Similarity candidates are editorial review hints, not automatic duplicates.\n- Only integer, non-negative, JavaScript-safe answers map to the existing PostgreSQL \`BigInt\` and scoring rules. Decimal answers are rejected until the game model supports them.\n- Source types \`year\` map to \`year\`; \`count\`, \`measure\`, and \`money_or_large\` map to \`number\`, while the original type and metadata are preserved.\n- \`source_hint\` is preserved as a source note; private gameplay hints are generated by the server from structurally valid numeric answers.\n- Structural validation determines eligibility; historical editorial approval metadata does not gate import or gameplay.\n`
 }
 
 export async function writeQuestionBankArtifacts(audit: QuestionBankAudit, databaseImport: DatabaseImportCounts | null = null, error?: string): Promise<void> {

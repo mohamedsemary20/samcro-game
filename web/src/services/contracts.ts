@@ -34,7 +34,7 @@ export interface GameRealtimeConnection {
   onConnectionStatus(listener: (status: 'connected' | 'reconnecting') => void): () => void
   leaveRoom(roomId: string): void
   setReady(ready: boolean): void
-  startMatch(idempotencyKey: string): void
+  startMatch(idempotencyKey: string): Promise<ActionAcknowledgement>
   syncGameState(roomId: string): void
   requestHint(idempotencyKey: string): Promise<ActionAcknowledgement>
   requestLoan(idempotencyKey: string): Promise<ActionAcknowledgement>

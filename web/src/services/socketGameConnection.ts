@@ -36,7 +36,7 @@ declare global {
 }
 
 const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api/v1'
-const socketOrigin = import.meta.env.VITE_SOCKET_ORIGIN || new URL(apiBase).origin
+const socketOrigin = import.meta.env.VITE_SOCKET_ORIGIN || new URL(apiBase, window.location.origin).origin
 let socketClientScript: Promise<void> | null = null
 
 function loadSocketClient(): Promise<void> {
@@ -132,7 +132,9 @@ export class SocketGameConnection implements GameRealtimeConnection {
 
   setReady(ready: boolean): void { this.requireSocket().emit('room:ready', { ready }) }
   leaveRoom(roomId: string): void { this.requireSocket().emit('room:leave', { roomId }) }
-  startMatch(idempotencyKey: string): void { this.requireSocket().emit('match:start', { idempotencyKey }) }
+  startMatch(idempotencyKey: string): Promise<ActionAcknowledgement> {
+    return this.withAcknowledgement((acknowledge) => this.requireSocket().emit('match:start', { idempotencyKey }, acknowledge))
+  }
   syncGameState(roomId: string): void { this.requireSocket().emit('game:sync', { roomId }) }
   requestHint(idempotencyKey: string): Promise<ActionAcknowledgement> {
     return this.withAcknowledgement((acknowledge) => this.requireSocket().emit('game:hint.request', { idempotencyKey }, acknowledge))

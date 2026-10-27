@@ -32,7 +32,7 @@ const directory = fileURLToPath(new URL('../data/browser-match-test/', import.me
 const draftPath = fileURLToPath(new URL('../data/browser-match-test/question-drafts.json', import.meta.url))
 
 describe('isolated browser-match question drafts', () => {
-  it('normalizes ten tagged records while keeping every draft ineligible for gameplay', async () => {
+  it('normalizes structurally valid records independently of historical review metadata', async () => {
     const pack = JSON.parse(await readFile(draftPath, 'utf8')) as BrowserTestQuestionPack
     const audit = await inspectQuestionBank(directory)
 
@@ -45,8 +45,8 @@ describe('isolated browser-match question drafts', () => {
     expect(audit.valid).toBe(true)
     expect(audit.normalizedRecords).toHaveLength(10)
     expect(audit.rejectedRecords).toHaveLength(0)
-    expect(audit.playableCount).toBe(0)
-    expect(audit.normalizedRecords.every((question) => question.playable === false && question.approvedHint === null)).toBe(true)
+    expect(audit.playableCount).toBe(10)
+    expect(audit.normalizedRecords.every((question) => question.playable === true)).toBe(true)
 
     const expectedAnswers = new Map([
       ['browser_test_area_rectangle_001', 126],

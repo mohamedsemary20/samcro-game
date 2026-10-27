@@ -4,8 +4,8 @@ import { isDefinitiveRoomRestoreFailure, isSocketTransportFailure, socketErrorMe
 describe('frontend socket error policy', () => {
   it('keeps expected action rejections on the connected room screen', () => {
     expect(isSocketTransportFailure('QUESTION_BANK_INCOMPLETE')).toBe(false)
-    expect(socketErrorMessage({ code: 'QUESTION_BANK_INCOMPLETE', message: 'Five approved questions required.' }))
-      .toContain('أسئلة معتمدة')
+    expect(socketErrorMessage({ code: 'QUESTION_BANK_INCOMPLETE', message: 'Five active questions required.' }))
+      .toContain(String.fromCodePoint(0x0623, 0x0633, 0x0626, 0x0644, 0x0629))
   })
 
   it('marks actual transport and session failures as connection failures', () => {

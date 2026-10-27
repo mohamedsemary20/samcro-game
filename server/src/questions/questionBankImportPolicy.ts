@@ -12,12 +12,11 @@ export interface ExistingQuestionForImport {
   sourceRecordIndex: number | null
   metadata: unknown
   enabled: boolean
-  hint: { approved: boolean; approvedAt: Date | null } | null
 }
 
 export type QuestionImportPlan =
   | { kind: 'insert'; record: QuestionBankRecord }
-  | { kind: 'update'; record: QuestionBankRecord; revokeHintApproval: boolean }
+  | { kind: 'update'; record: QuestionBankRecord }
   | { kind: 'skip'; record: QuestionBankRecord }
   | { kind: 'conflict'; record: QuestionBankRecord; reason: string }
 
@@ -49,9 +48,6 @@ export function planQuestionImport(
     if (!existing) return { kind: 'insert', record }
     if (existing.sourceFile !== record.sourceFile) return { kind: 'conflict', record, reason: 'stable-id-owned-by-another-source' }
     if (!differs(existing, record)) return { kind: 'skip', record }
-    const revokeHintApproval = existing.promptAr !== record.promptAr
-      || existing.answer !== BigInt(record.answer)
-      || existing.type !== record.type
-    return { kind: 'update', record, revokeHintApproval }
+    return { kind: 'update', record }
   })
 }

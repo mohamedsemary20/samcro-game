@@ -20,7 +20,7 @@ function integrationFixtureEnvironmentAllowed(): boolean {
 }
 
 export interface QuestionRepository {
-  getApprovedById(transaction: Prisma.TransactionClient, questionId: string): Promise<GameQuestion>
+  getActiveById(transaction: Prisma.TransactionClient, questionId: string): Promise<GameQuestion>
   getHintForPlayer?(transaction: Prisma.TransactionClient, questionId: string, playerId: string, roundPlayerIds: string[]): Promise<GameQuestion>
   selectUnused(transaction: Prisma.TransactionClient, usedQuestionIds: string[]): Promise<GameQuestion>
 }
@@ -46,8 +46,25 @@ function isSupportedType(type: string): type is 'year' | 'number' {
   return type === 'year' || type === 'number'
 }
 
-export class NoApprovedQuestionsError extends Error {
-  constructor() { super('No approved question is available for this round.'); this.name = 'NoApprovedQuestionsError' }
+function isStructurallyEligibleQuestion(question: { id: string; promptAr: string; answer: bigint; category: string; type: string; enabled: boolean }): boolean {
+  return /^[A-Za-z0-9_-]{1,64}$/u.test(question.id)
+    && /[\u0600-\u06ff]/u.test(question.promptAr)
+    && question.promptAr.trim().length > 0
+    && question.category.trim().length > 0
+    && question.category.length <= 80
+    && question.enabled
+    && isSupportedType(question.type)
+    && question.answer >= 0n
+    && question.answer <= BigInt(Number.MAX_SAFE_INTEGER)
+}
+
+function isUsableRuntimeHint(hint: { range: string; accuracy: string; advisoryNote: string }): boolean {
+  return Boolean(hint.range.trim() && hint.accuracy.trim() && hint.advisoryNote.trim())
+    && hint.range.length <= 120 && hint.accuracy.length <= 120 && hint.advisoryNote.length <= 240
+}
+
+export class NoEligibleQuestionsError extends Error {
+  constructor() { super('No eligible question is available for this round.'); this.name = 'NoEligibleQuestionsError' }
 }
 
 export class PrismaQuestionRepository implements QuestionRepository {
@@ -78,12 +95,12 @@ export class PrismaQuestionRepository implements QuestionRepository {
     })
   }
 
-  async getApprovedById(transaction: Prisma.TransactionClient, questionId: string): Promise<GameQuestion> {
+  async getActiveById(transaction: Prisma.TransactionClient, questionId: string): Promise<GameQuestion> {
     await this.verifyLocalDatabase(transaction)
     const question = await transaction.question.findUnique({
       where: { id: questionId },
       select: {
-        id: true, promptAr: true, answer: true, category: true, type: true, sourceFile: true, metadata: true,
+        id: true, promptAr: true, answer: true, category: true, type: true, sourceFile: true, metadata: true, enabled: true,
         hint: { select: { range: true, accuracy: true, note: true, approved: true } },
       },
     })
@@ -92,25 +109,20 @@ export class PrismaQuestionRepository implements QuestionRepository {
       && isLocalTestQuestionMetadata(question.metadata)
       && question.hint?.approved === false
     const ordinaryQuestion = !this.localTestPoolEnabled
-      && question?.hint?.approved === true
+      && question?.enabled === true
       && question.sourceFile !== LOCAL_TEST_QUESTION_SOURCE
       && (question.sourceFile !== integrationFixtureSource || this.integrationFixturesEnabled)
-    if ((!localTestQuestion && !ordinaryQuestion) || !question?.hint
-      || (localTestQuestion ? !hasTextHint(question.hint) : !isValidHint(question.hint)) || !isSupportedType(question.type)) {
-      throw new NoApprovedQuestionsError()
+    if ((!localTestQuestion && !ordinaryQuestion) || !question || !isStructurallyEligibleQuestion(question)) {
+      throw new NoEligibleQuestionsError()
     }
-    if (Number(question.answer) > Number.MAX_SAFE_INTEGER || question.answer < 0n) throw new Error('UNSAFE_QUESTION_ANSWER')
-    return { ...question, hint: { range: question.hint.range, accuracy: question.hint.accuracy, advisoryNote: question.hint.note } }
+    const generated = generatePlayerHint(Number(question.answer), this.hintRandomInt)
+    if (!isUsableRuntimeHint(generated)) throw new NoEligibleQuestionsError()
+    return { ...question, hint: generated }
   }
 
   async getHintForPlayer(transaction: Prisma.TransactionClient, questionId: string, playerId: string, roundPlayerIds: string[]): Promise<GameQuestion> {
-    const question = await this.getApprovedById(transaction, questionId)
     if (!roundPlayerIds.includes(playerId)) throw new Error('HINT_PLAYER_NOT_IN_ROUND')
-    const generated = generatePlayerHint(Number(question.answer), this.hintRandomInt)
-    return {
-      ...question,
-      hint: generated,
-    }
+    return this.getActiveById(transaction, questionId)
   }
 
   async selectUnused(transaction: Prisma.TransactionClient, usedQuestionIds: string[]): Promise<GameQuestion> {
@@ -134,7 +146,7 @@ export class PrismaQuestionRepository implements QuestionRepository {
         && question.hint && hasTextHint(question.hint) && isSupportedType(question.type)
         && question.answer >= 0n && question.answer <= BigInt(Number.MAX_SAFE_INTEGER))
       const question = eligible[randomInt(eligible.length)]
-      if (!question?.hint) throw new NoApprovedQuestionsError()
+      if (!question?.hint) throw new NoEligibleQuestionsError()
       return { ...question, hint: { range: question.hint.range, accuracy: question.hint.accuracy, advisoryNote: question.hint.note } }
     }
 
@@ -142,24 +154,25 @@ export class PrismaQuestionRepository implements QuestionRepository {
       enabled: true,
       answer: { gte: 0n, lte: BigInt(Number.MAX_SAFE_INTEGER) },
       type: { in: ['year', 'number'] },
-      hint: { is: { approved: true, range: { not: '' }, accuracy: { not: '' }, note: { not: '' } } },
       ...(!this.integrationFixturesEnabled ? { OR: [{ sourceFile: null }, { sourceFile: { notIn: [integrationFixtureSource, LOCAL_TEST_QUESTION_SOURCE] } }] } : {}),
       ...(usedQuestionIds.length ? { id: { notIn: usedQuestionIds } } : {}),
     }
-    const count = await transaction.question.count({ where })
-    if (count === 0) throw new NoApprovedQuestionsError()
-    const question = await transaction.question.findFirst({
+    const questions = await transaction.question.findMany({
       where,
       orderBy: { id: 'asc' },
-      skip: randomInt(count),
       select: {
-        id: true, promptAr: true, answer: true, category: true, type: true,
-        hint: { select: { range: true, accuracy: true, note: true } },
+        id: true, promptAr: true, answer: true, category: true, type: true, sourceFile: true, enabled: true,
       },
     })
-    if (!question?.hint || !isValidHint(question.hint) || !isSupportedType(question.type)) throw new NoApprovedQuestionsError()
-    if (Number(question.answer) > Number.MAX_SAFE_INTEGER || question.answer < 0n) throw new Error('UNSAFE_QUESTION_ANSWER')
-    return { ...question, hint: { range: question.hint.range, accuracy: question.hint.accuracy, advisoryNote: question.hint.note } }
+    const eligible = questions.filter((question) => isStructurallyEligibleQuestion(question)
+      && (question.sourceFile !== integrationFixtureSource || this.integrationFixturesEnabled)
+      && question.sourceFile !== LOCAL_TEST_QUESTION_SOURCE)
+    if (eligible.length === 0) throw new NoEligibleQuestionsError()
+    const question = eligible[randomInt(eligible.length)]
+    if (!question) throw new NoEligibleQuestionsError()
+    const hint = generatePlayerHint(Number(question.answer), this.hintRandomInt)
+    if (!isUsableRuntimeHint(hint)) throw new NoEligibleQuestionsError()
+    return { ...question, hint }
   }
 }
 

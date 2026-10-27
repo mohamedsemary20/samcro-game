@@ -43,6 +43,12 @@ No frontend automated test script is configured yet. Socket.IO client code is se
 
 The server UI connects guest sessions, room creation/joining, readiness, match start, private hints, guess locking, betting actions, reveals, and completed leaderboards to the authoritative backend. The server is not a fake local multiplayer adapter. Chat and profile/settings persistence remain unconnected. A match requires at least three ready players.
 
+## Cloudflare Pages deployment
+
+Configure the Pages Git project with project root `web`, build command `npm run build`, and build output directory `dist`. Production Vite settings are same-origin: `VITE_API_BASE_URL=/api/v1` and `VITE_SOCKET_ORIGIN` blank. The Pages Functions binding `SAMKARO_BACKEND_ORIGIN` must be `https://curl-growing-giraffe.abasthan.app`.
+
+`functions/api/v1/[[path]].ts` and `functions/socket.io/[[path]].ts` proxy the two backend route trees. `public/_routes.json` is copied into the build output and limits Function invocations to those routes. The Pages project must deploy the `functions/` directory from this project root; deploying only the static `dist/` assets leaves the SPA fallback serving HTML for API and Socket.IO paths.
+
 Expected Socket.IO action rejections such as `QUESTION_BANK_INCOMPLETE` are shown as Arabic room errors without clearing a healthy room or socket. A transient failure while restoring a saved room keeps its room ID and offers a retry; only a confirmed missing room or expired membership clears that saved ID. The browser app has no automated browser-test runner configured.
 
 For manual recovery verification, open three browser profiles at `http://localhost:5173`, create or join one room, and ready all three players. With the production bank still empty, start as host: the Arabic approved-question error should appear while the room code, roster, and connected lobby remain visible. Change one guest's ready state and verify the roster still updates. To check initial restore recovery, reload during a temporary API interruption, restore the API, then use the room restore retry action; the saved membership should remain available.

@@ -130,12 +130,14 @@ model Question {
   sourceFile String?     @db.VarChar(240)
   sourceRecordIndex Int?
   metadata   Json?
+  /// Active questions pass structural validation; runtime hints are generated privately from the answer.
   enabled    Boolean     @default(false)
   createdAt  DateTime    @default(now())
   rounds     GameRound[]
   hint       ApprovedQuestionHint?
 
   @@index([sourceFile, sourceRecordIndex])
+  @@index([enabled, type])
 }
 
 model ApprovedQuestionHint {

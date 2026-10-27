@@ -49,6 +49,7 @@ export default function ServerApp() {
   const [roomRestoreFailed, setRoomRestoreFailed] = useState(false)
   const [roomRestoreAttempt, setRoomRestoreAttempt] = useState(0)
   const [busy, setBusy] = useState(false)
+  const [startingMatch, setStartingMatch] = useState(false)
   const [connected, setConnected] = useState(false)
   const [roomConnectionAttempt, setRoomConnectionAttempt] = useState(0)
   const [error, setError] = useState('')
@@ -60,6 +61,7 @@ export default function ServerApp() {
   const [pendingAction, setPendingAction] = useState<'hint' | 'loan' | 'guess' | 'bet' | null>(null)
   const [pendingBalanceBefore, setPendingBalanceBefore] = useState<number | null>(null)
   const actionLock = useRef(false)
+  const startLock = useRef(false)
   const gameStateRef = useRef<PublicGameState | null>(null)
   const roomRef = useRef(room)
   roomRef.current = room
@@ -278,6 +280,13 @@ export default function ServerApp() {
 
   const socketActionError = (actionError: ApiError): string => {
     const messages: Record<string, string> = {
+      PLAYERS_NOT_READY: 'لازم ٣ لاعبين على الأقل يكونوا جاهزين قبل ما تبدأوا.',
+      HOST_REQUIRED: 'صاحب الغرفة فقط يقدر يبدأ المباراة.',
+      ROOM_NOT_WAITING: 'المباراة بدأت بالفعل أو الغرفة لم تعد تنتظر.',
+      ROOM_NOT_JOINED: 'اتصل بالغرفة مرة أخرى ثم حاول بدء المباراة.',
+      QUESTION_BANK_INCOMPLETE: 'لا توجد خمسة أسئلة معتمدة بتلميحات معتمدة. لم تتغير الغرفة؛ حاول لاحقًا بعد مراجعة بنك الأسئلة.',
+      ACK_TIMEOUT: 'لم يصل تأكيد البدء في الوقت المحدد. حدّث حالة الغرفة قبل إعادة المحاولة.',
+      SOCKET_DISCONNECTED: 'انقطع اتصال الغرفة. أعد الاتصال ثم حاول مرة أخرى.',
       OUT_OF_TURN: 'لسه مش دورك. استنى تحديث حالة اللعب.',
       ACTION_DEADLINE_PASSED: 'الوقت خلص. هنحدّثلك حالة الجولة دلوقتي.',
       GUESS_PHASE_CLOSED: 'وقت التخمين خلص. استنى كشف الجولة الجاية.',
@@ -290,11 +299,25 @@ export default function ServerApp() {
       LOAN_NOT_NEEDED: 'السلفة مش متاحة لرصيدك الحالي أو اتاخدت قبل كده.',
       INSUFFICIENT_CHIPS: 'الفيش اللي معاك مش كفاية للرهان ده.',
       BETTING_CLOSED: 'مرحلة الرهان خلصت.',
-      ACK_TIMEOUT: 'السيرفر ما أكدش الحركة في وقتها. بنراجع حالة الجولة قبل ما تحاول تاني.',
-      SOCKET_DISCONNECTED: 'الاتصال اتقطع. أول ما يرجع هنزامن الرصيد والجولة.',
       ACTION_ALREADY_APPLIED: 'الحركة اتسجلت بالفعل. بنحدّث حالة الجولة.',
     }
     return messages[actionError.code] ?? 'الحركة ما اتقبلتش. راجع حالة اللعبة وحاول تاني.'
+  }
+
+  async function startMatch(): Promise<void> {
+    if (startLock.current || !canStart) return
+    startLock.current = true
+    setStartingMatch(true)
+    setError('')
+    try {
+      const result = await gameRealtime.startMatch(crypto.randomUUID())
+      if (!result.ok) setError(socketActionError(result.error))
+    } catch {
+      setError('تعذر إرسال طلب بدء المباراة. تحقق من الاتصال ثم حاول مرة أخرى.')
+    } finally {
+      startLock.current = false
+      setStartingMatch(false)
+    }
   }
 
   async function performAction(kind: 'hint' | 'loan' | 'guess' | 'bet', action: () => Promise<import('./domain/types').ActionAcknowledgement>): Promise<void> {
@@ -418,7 +441,7 @@ export default function ServerApp() {
         </div>
         <div className="sam-lobby-footer"><div className="sam-ready-copy"><strong>{room.players.filter((member) => member.isReady).length} من {room.players.length} جاهزين</strong><small>{room.room.status === 'waiting' ? '٣ لاعبين جاهزين على الأقل عشان تبدأوا' : 'بنجهّز الطاولة دلوقتي'}</small></div><div className="sam-lobby-actions">
           <ActionButton tone={ready ? 'green' : 'quiet'} disabled={!connected || room.room.status !== 'waiting'} onClick={() => gameRealtime.setReady(!ready)}>{ready ? '✓ أنا جاهز' : 'جهّزني'}</ActionButton>
-          {room.room.hostPlayerId === player.id && <ActionButton disabled={!canStart} onClick={() => { setError(''); gameRealtime.startMatch(crypto.randomUUID()) }}>ابدأوا اللعب <span aria-hidden="true">←</span></ActionButton>}
+          {room.room.hostPlayerId === player.id && <ActionButton disabled={!canStart || startingMatch} onClick={() => { void startMatch() }}>{startingMatch ? 'بنبدأ المباراة…' : 'ابدأوا اللعب'} <span aria-hidden="true">←</span></ActionButton>}
           <ActionButton tone="quiet" onClick={leaveRoom}>سيب الغرفة</ActionButton>
         </div></div>
         {room.room.hostPlayerId === player.id && !canStart && room.room.status === 'waiting' && <p className="sam-start-hint">{!connected ? 'الاتصال لسه راجع؛ استنى لحظة وجرب تاني.' : room.players.length < 3 ? 'محتاجين ٣ لاعبين على الأقل.' : 'استنى لما كل الموجودين يجهزوا.'}</p>}
