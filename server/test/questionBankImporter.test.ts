@@ -43,4 +43,54 @@ describe('structural question-bank import', () => {
     await expect(importQuestionBank(prisma, audit)).rejects.toThrow(/invalid JSON structure or duplicate stable IDs/)
     expect(transactions).toBe(0)
   })
+
+  it('keeps the import atomic when a database write fails mid-transaction', async () => {
+    const audit = await inspectQuestionBank()
+    const records = audit.normalizedRecords.filter((record) => record.playable).slice(0, 2)
+    expect(records).toHaveLength(2)
+    audit.normalizedRecords = records
+    audit.rejectedRecords = []
+
+    const original = {
+      id: records[0]!.id,
+      promptAr: 'old prompt',
+      answer: BigInt(records[0]!.answer - 1),
+      category: records[0]!.category,
+      type: records[0]!.type,
+      difficulty: records[0]!.difficulty,
+      locale: 'ar',
+      source: records[0]!.source,
+      sourceFile: records[0]!.sourceFile,
+      sourceRecordIndex: records[0]!.sourceRecordIndex,
+      metadata: records[0]!.metadata,
+      enabled: false,
+    }
+    let rows: Array<Record<string, unknown>> = [{ ...original }]
+    const tx = {
+      question: {
+        findMany: async () => rows,
+        create: async () => { throw new Error('simulated database write failure') },
+        update: async ({ where, data }: { where: { id: string }; data: Record<string, unknown> }) => {
+          Object.assign(rows.find((row) => row.id === where.id)!, data)
+        },
+      },
+    }
+    let transactionOptions: unknown
+    const prisma = {
+      $transaction: async (operation: (transaction: typeof tx) => Promise<unknown>, options: unknown) => {
+        transactionOptions = options
+        const snapshot = rows.map((row) => ({ ...row }))
+        try {
+          return await operation(tx)
+        } catch (error) {
+          rows = snapshot
+          throw error
+        }
+      },
+    } as unknown as PrismaClient
+
+    await expect(importQuestionBank(prisma, audit)).rejects.toThrow('simulated database write failure')
+    expect(rows).toEqual([original])
+    expect(transactionOptions).toEqual({ isolationLevel: 'Serializable', maxWait: 10_000, timeout: 120_000 })
+  })
 })

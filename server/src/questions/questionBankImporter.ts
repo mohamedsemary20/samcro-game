@@ -71,5 +71,5 @@ export async function importQuestionBank(prisma: PrismaClient, audit: QuestionBa
       }
     }
     return counts
-  }, { isolationLevel: 'Serializable' })
+  }, { isolationLevel: 'Serializable', maxWait: 10_000, timeout: 120_000 })
 }
