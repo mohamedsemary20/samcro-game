@@ -163,8 +163,10 @@ suite('PostgreSQL-backed REST and Socket.IO room lifecycle', () => {
     expect(process.env.SAMKARO_RUN_DB_INTEGRATION).toBe('1')
     const configuredUrl = process.env.DATABASE_URL
     expect(configuredUrl, 'test:integration must load server/.env').toBeTruthy()
-    const configuredDatabase = decodeURIComponent(new URL(configuredUrl!).pathname.slice(1)).split('/')[0]
-    expect(configuredDatabase).toBe('samkaro_dev')
+    const parsedDatabaseUrl = new URL(configuredUrl!)
+    expect(['localhost', '127.0.0.1', '::1']).toContain(parsedDatabaseUrl.hostname.toLowerCase())
+    const configuredDatabase = decodeURIComponent(parsedDatabaseUrl.pathname.slice(1)).split('/')[0]
+    expect(configuredDatabase).toBe(process.env.SAMKARO_INTEGRATION_DATABASE ?? 'samkaro_dev')
     expect(process.env.NODE_ENV).toBe('development')
     expect(process.env.SAMKARO_RUN_DB_INTEGRATION).toBe('1')
     expect(process.env.SAMKARO_ENABLE_TEST_QUESTION_POOL).toBeUndefined()
@@ -179,7 +181,7 @@ suite('PostgreSQL-backed REST and Socket.IO room lifecycle', () => {
 
     const db = prisma as PrismaClient
     const connectedDatabase = await db.$queryRaw<Array<{ database_name: string }>>`SELECT current_database() AS database_name`
-    expect(connectedDatabase[0]?.database_name).toBe('samkaro_dev')
+    expect(connectedDatabase[0]?.database_name).toBe(configuredDatabase)
     expect(Number(process.env.GOLDEN_HINT_PROBABILITY ?? 0)).toBe(0)
     const staleFixtures = await db.question.findMany({
       where: { sourceFile: '__automated_integration_fixture__' },

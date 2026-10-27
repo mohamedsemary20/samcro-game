@@ -5,6 +5,7 @@ import { PrismaClient } from '@prisma/client'
 
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const isolatedSchema = 'samkaro_question_test'
+const integrationDatabase = process.env.SAMKARO_INTEGRATION_DATABASE ?? 'samkaro_dev'
 
 function run(args) {
   const result = spawnSync(process.execPath, args, { cwd: serverRoot, env: process.env, encoding: 'utf8' })
@@ -24,9 +25,12 @@ async function main() {
   try { databaseUrl = new URL(process.env.DATABASE_URL) }
   catch { throw new Error('The local integration DATABASE_URL is invalid.') }
   const hostname = databaseUrl.hostname.toLowerCase()
+  if (integrationDatabase !== 'samkaro_dev' && !/^samkaro_mp_integration_[a-z0-9_]+$/u.test(integrationDatabase)) {
+    throw new Error('Custom integration databases must use the samkaro_mp_integration_ prefix.')
+  }
   if (!['localhost', '127.0.0.1', '::1'].includes(hostname)
-      || decodeURIComponent(databaseUrl.pathname.slice(1)).split('/')[0] !== 'samkaro_dev') {
-    throw new Error('Local integration requires the loopback samkaro_dev database.')
+      || decodeURIComponent(databaseUrl.pathname.slice(1)).split('/')[0] !== integrationDatabase) {
+    throw new Error(`Local integration requires the loopback ${integrationDatabase} database.`)
   }
   process.env.NODE_ENV = 'development'
   process.env.SAMKARO_RUN_DB_INTEGRATION = '1'
@@ -35,7 +39,7 @@ async function main() {
   const identityClient = new PrismaClient({ datasourceUrl: databaseUrl.toString() })
   try {
     const identity = await identityClient.$queryRaw`SELECT current_database() AS database_name`
-    if (identity[0]?.database_name !== 'samkaro_dev') throw new Error('Connected database is not samkaro_dev.')
+    if (identity[0]?.database_name !== integrationDatabase) throw new Error('Connected database does not match the selected local integration database.')
     await identityClient.$executeRawUnsafe(`CREATE SCHEMA IF NOT EXISTS "${isolatedSchema}"`)
   } finally {
     await identityClient.$disconnect()
