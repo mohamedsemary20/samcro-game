@@ -1,16 +1,36 @@
 {
   "id": "/",
-  "name": "سمكرو | Samkaro",
-  "short_name": "سمكرو",
+  "name": "Samkaro — سمكرو",
+  "short_name": "Samkaro",
   "description": "لعبة التخمين والتلميح بين الأصدقاء",
   "lang": "ar",
   "dir": "rtl",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#101215",
-  "theme_color": "#101215",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#17191C",
+  "theme_color": "#17191C",
+  "categories": ["games", "entertainment", "social"],
   "icons": [
-    { "src": "/assets/app-logo.png", "sizes": "768x768", "type": "image/png", "purpose": "any maskable" }
+    {
+      "src": "/assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }

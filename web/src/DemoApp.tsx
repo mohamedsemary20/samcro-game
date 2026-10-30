@@ -9,7 +9,6 @@ import { LiveGamePage } from './pages/LiveGamePage'
 import { LobbyPage } from './pages/LobbyPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { APP_MODE } from './services/demoMode'
-import './styles.css'
 
 function App() {
   const [tab, setTab] = useState<NavigationTab>('home')
@@ -102,7 +101,7 @@ function App() {
   if (inGame) {
     page = <LiveGamePage snapshot={snapshot} guessText={guessText} hintType={hintType} feedback={feedback} onHintType={setHintType} onGuessText={setGuessText} onPhase={updatePhase} onBet={applyBet} onSubmitGuess={submitGuess} onNextRound={nextRound} onLeave={() => { setInGame(false); setTab('lobby') }} />
   } else if (tab === 'lobby') {
-    page = <LobbyPage players={snapshot.publicState.players} roomCode={snapshot.publicState.room.code} ready={ready} onReady={() => setReady((current) => !current)} onStart={startMatch} onJoin={(code) => setSnapshot((current) => ({ ...current, publicState: { ...current.publicState, room: { ...current.publicState.room, code } } }))} />
+    page = <LobbyPage players={snapshot.publicState.players} roomCode={snapshot.publicState.room.code} ready={ready} onReady={() => setReady((current) => !current)} onStart={startMatch} />
   } else if (tab === 'leaderboard') {
     page = <LeaderboardPage entries={snapshot.publicState.leaderboard} onPlayAgain={restartMatch} />
   } else if (tab === 'profile') {

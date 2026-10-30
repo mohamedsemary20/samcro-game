@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { AppDialog } from './AppDialog'
 import { Icon } from './Icon'
 import { isStandaloneMode, shouldOfferIosInstallHelp } from '../services/installPlatform.js'
 
@@ -10,19 +11,31 @@ interface InstallPromptEvent extends Event {
 declare global {
   interface WindowEventMap {
     beforeinstallprompt: InstallPromptEvent
+    'samkaro:install-request': Event
   }
   interface Navigator {
     standalone?: boolean
   }
 }
 
+const DISMISS_KEY = 'samkaro.install-nudge-dismissed-at'
+const DISMISS_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
+
+function wasRecentlyDismissed(): boolean {
+  try {
+    const stored = Number(window.localStorage.getItem(DISMISS_KEY))
+    return Number.isFinite(stored) && stored > 0 && Date.now() - stored < DISMISS_WINDOW_MS
+  } catch {
+    return false
+  }
+}
+
 export function InstallExperience() {
   const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null)
   const [standalone, setStandalone] = useState(false)
-  const [iosHelp, setIosHelp] = useState(false)
-  const [dismissed, setDismissed] = useState(false)
+  const [help, setHelp] = useState<'ios' | 'manual' | null>(null)
+  const [dismissed, setDismissed] = useState(wasRecentlyDismissed)
   const [installing, setInstalling] = useState(false)
-  const dialogRef = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {
     const updateStandalone = () => setStandalone(isStandaloneMode(window.matchMedia('(display-mode: standalone)').matches, navigator.standalone))
@@ -33,32 +46,27 @@ export function InstallExperience() {
     const handleInstalled = () => {
       setStandalone(true)
       setInstallPrompt(null)
-      setIosHelp(false)
+      setHelp(null)
+      try { window.localStorage.removeItem(DISMISS_KEY) } catch { /* Storage may be unavailable in private browsing. */ }
     }
     updateStandalone()
-    window.matchMedia('(display-mode: standalone)').addEventListener('change', updateStandalone)
+    const mediaQuery = window.matchMedia('(display-mode: standalone)')
+    mediaQuery.addEventListener('change', updateStandalone)
     window.addEventListener('beforeinstallprompt', handleInstallPrompt)
     window.addEventListener('appinstalled', handleInstalled)
     return () => {
-      window.matchMedia('(display-mode: standalone)').removeEventListener('change', updateStandalone)
+      mediaQuery.removeEventListener('change', updateStandalone)
       window.removeEventListener('beforeinstallprompt', handleInstallPrompt)
       window.removeEventListener('appinstalled', handleInstalled)
     }
   }, [])
 
-  const showIosHelp = shouldOfferIosInstallHelp({
+  const iosHelp = shouldOfferIosInstallHelp({
     userAgent: navigator.userAgent,
     platform: navigator.platform,
     maxTouchPoints: navigator.maxTouchPoints,
     standalone,
   })
-
-  useEffect(() => {
-    const dialog = dialogRef.current
-    if (!dialog) return
-    if (iosHelp && !dialog.open) dialog.showModal()
-    if (!iosHelp && dialog.open) dialog.close()
-  }, [iosHelp])
 
   async function install(): Promise<void> {
     if (!installPrompt || installing) return
@@ -66,28 +74,56 @@ export function InstallExperience() {
     try {
       await installPrompt.prompt()
       const choice = await installPrompt.userChoice
-      if (choice.outcome === 'accepted') setInstallPrompt(null)
+      if (choice.outcome === 'accepted') {
+        setInstallPrompt(null)
+        setDismissed(true)
+      }
     } finally {
       setInstalling(false)
     }
   }
 
-  if (standalone || dismissed || (!installPrompt && !showIosHelp)) return null
+  function dismissNudge(): void {
+    setDismissed(true)
+    try { window.localStorage.setItem(DISMISS_KEY, String(Date.now())) } catch { /* Dismissal is best effort only. */ }
+  }
+
+  useEffect(() => {
+    const handleRequest = () => {
+      if (standalone) return
+      if (installPrompt) { void install(); return }
+      setHelp(iosHelp ? 'ios' : 'manual')
+    }
+    window.addEventListener('samkaro:install-request', handleRequest)
+    return () => window.removeEventListener('samkaro:install-request', handleRequest)
+  })
+
+  const canOfferInstall = Boolean(installPrompt || iosHelp)
 
   return <>
-    <aside className="install-nudge" aria-label="تثبيت سمكرو">
+    {!standalone && !dismissed && canOfferInstall && !help && <aside className="install-nudge" aria-label="تثبيت سمكرو">
       <span className="install-nudge-mark"><Icon name="download" size={18} /></span>
       <span className="install-nudge-copy"><strong>سمكرو على موبايلك</strong><small>افتح اللعبة من شاشتك الرئيسية</small></span>
-      <button className="install-nudge-action" type="button" disabled={installing} onClick={() => installPrompt ? void install() : setIosHelp(true)}>{installing ? 'بنجهّز…' : installPrompt ? 'تثبيت' : 'إزاي؟'}</button>
-      <button className="install-nudge-close" type="button" aria-label="إخفاء اقتراح التثبيت" onClick={() => setDismissed(true)}><Icon name="close" size={17} /></button>
-    </aside>
-    <dialog className="install-dialog" ref={dialogRef} onCancel={() => setIosHelp(false)} aria-labelledby="install-dialog-title">
-      <div className="install-dialog-mark"><img src="/assets/app-logo.png" alt="" /></div>
-      <span className="sam-eyebrow">تجربة سمكرو</span>
-      <h2 id="install-dialog-title">ضيفها لشاشتك الرئيسية</h2>
-      <p>من Safari اضغط زر المشاركة، وبعدها اختار «إضافة إلى الشاشة الرئيسية».</p>
-      <div className="install-steps"><span><b>١</b> مشاركة</span><span><b>٢</b> إضافة إلى الشاشة الرئيسية</span><span><b>٣</b> إضافة</span></div>
-      <button className="button button-gold" type="button" onClick={() => setIosHelp(false)}>تمام</button>
-    </dialog>
+      <button className="install-nudge-action" type="button" disabled={installing} onClick={() => installPrompt ? void install() : setHelp('ios')}>{installing ? 'بنجهّز…' : installPrompt ? 'تثبيت' : 'إزاي؟'}</button>
+      <button className="install-nudge-close" type="button" aria-label="إخفاء اقتراح التثبيت" onClick={dismissNudge}><Icon name="close" size={17} /></button>
+    </aside>}
+
+    <AppDialog
+      open={help !== null}
+      title={help === 'ios' ? 'ضيف سمكرو لشاشتك الرئيسية' : 'ثبّت سمكرو كتطبيق'}
+      description={help === 'ios' ? 'من Safari على iPhone أو iPad، الخطوات بسيطة:' : 'من قائمة المتصفح، اختار «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».'}
+      icon="download"
+      confirmLabel="تمام"
+      showCancel={false}
+      onConfirm={() => setHelp(null)}
+      onClose={() => setHelp(null)}
+    >
+      <div className="install-steps">
+        {help === 'ios'
+          ? <><span><b>١</b> دوس على زر المشاركة في Safari.</span><span><b>٢</b> اختار «إضافة إلى الشاشة الرئيسية».</span><span><b>٣</b> اضغط «إضافة».</span></>
+          : <><span><b>١</b> افتح قائمة المتصفح (⋮).</span><span><b>٢</b> اختار «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».</span><span><b>٣</b> أكد التثبيت.</span></>}
+      </div>
+      <p className="install-dialog-note"><Icon name="shield" size={15} /> التثبيت مش بيغيّر حسابك أو غرفتك؛ سمكرو هتفتح في نافذة مستقلة.</p>
+    </AppDialog>
   </>
 }
