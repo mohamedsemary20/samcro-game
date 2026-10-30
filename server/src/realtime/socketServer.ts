@@ -2,7 +2,8 @@ import type { Server as HttpServer } from 'node:http'
 import { randomUUID } from 'node:crypto'
 import { Server, type Socket } from 'socket.io'
 import type { ActionAcknowledgement, ClientToServerEvents, ServerToClientEvents } from '../../../shared/contracts.js'
-import { findSession, parseCookies } from '../auth/session.js'
+import { findSession } from '../auth/session.js'
+import { resolveSessionToken } from '../auth/sessionToken.js'
 import { env } from '../config/env.js'
 import { logger } from '../config/logger.js'
 import { prisma } from '../db/prisma.js'
@@ -106,7 +107,12 @@ export function attachSocketServer(httpServer: HttpServer, options: { questionRe
           outcome = 'UNTRUSTED_ORIGIN'
           return next(new Error('UNTRUSTED_ORIGIN'))
         }
-        const token = parseCookies(socket.handshake.headers.cookie).get(env.COOKIE_NAME)
+        const token = resolveSessionToken({
+          authorization: socket.handshake.headers.authorization,
+          cookieHeader: socket.handshake.headers.cookie,
+          cookieName: env.COOKIE_NAME,
+          nativeToken: socket.handshake.auth?.sessionToken,
+        })
         const session = token ? await findSession(token) : null
         if (!session) {
           outcome = 'SESSION_REQUIRED'

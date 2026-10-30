@@ -158,6 +158,11 @@ export interface GuestSessionResponse {
   expiresAt: string
 }
 
+/** Native clients keep this credential in platform secure storage and send it as Bearer auth. */
+export interface NativeGuestSessionResponse extends GuestSessionResponse {
+  sessionToken: string
+}
+
 export interface ApiError {
   code: string
   message: string

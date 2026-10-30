@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "Samkaro",
+    "slug": "samkaro-mobile",
+    "scheme": "samkaro",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": true
+        }
+      ],
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "./assets/fonts/Tajawal.ttf",
+            "./assets/fonts/Cairo.ttf"
+          ]
+        }
+      ],
+      ["expo-build-properties", { "android": { "usesCleartextTraffic": true } }]
+    ],
+    "android": {
+      "package": "com.samkaro.mobile",
+      "supportsRTL": true,
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "ACCESS_WIFI_STATE"
+      ]
+    },
+    "ios": {
+      "bundleIdentifier": "com.samkaro.mobile",
+      "supportsTablet": true,
+      "supportsRTL": true
+    },
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

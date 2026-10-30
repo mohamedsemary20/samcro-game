@@ -1,0 +1,16 @@
+{
+  "name": "@samkaro/game-core",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./engine": "./engine.ts",
+    "./local-match": "./localMatch.ts",
+    "./lan-protocol": "./lanProtocol.ts",
+    "./local-protocol": "./localProtocol.ts",
+    "./offline-questions": "./offlineQuestions.ts",
+    "./policies": "./policies.ts",
+    "./scoring": "./scoring.ts"
+  }
+}

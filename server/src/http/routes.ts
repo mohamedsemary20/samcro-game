@@ -28,6 +28,18 @@ apiRouter.post('/sessions/guest', guestLimiter, asyncRoute(async (request, respo
   response.status(201).json({ player: { id: created.session.playerId, name: created.session.displayName }, expiresAt: created.expiresAt.toISOString() })
 }))
 
+// Native clients cannot rely on browser cookie storage for Socket.IO handshakes.
+// Keep the web cookie endpoint unchanged and return a bearer credential only here.
+apiRouter.post('/sessions/native', guestLimiter, asyncRoute(async (request, response) => {
+  const input = guestSessionSchema.parse(request.body)
+  const created = await createGuestSession(input.displayName)
+  response.status(201).json({
+    player: { id: created.session.playerId, name: created.session.displayName },
+    expiresAt: created.expiresAt.toISOString(),
+    sessionToken: created.token,
+  })
+}))
+
 apiRouter.get('/sessions/me', requireSession, asyncRoute(async (request, response) => {
   response.json({ player: { id: request.auth!.playerId, name: request.auth!.displayName } })
 }))

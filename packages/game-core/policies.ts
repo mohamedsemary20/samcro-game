@@ -1,0 +1,28 @@
+/** Explicit product decisions approved for the initial server game. */
+export const GAME_POLICIES = Object.freeze({
+  roundsPerMatch: 5,
+  startingChips: 500,
+  ante: 50,
+  anteBelowMinimum: 'sit-out-round',
+  emergencyLoan: 200,
+  loan: 'optional-only-when-needed',
+  loanOptInMs: 30_000, // Provisional: reuses the turn duration pending a separate product value.
+  loanRepayment: 'match-end-from-available-chips',
+  noEntrantsAfterFunding: 'finish-match-retain-pot-unawarded',
+  turnTimeoutMs: 30_000,
+  bettingTimeout: 'fold-actor',
+  guessTimeout: 'skip-guess',
+  turnOrder: 'stable-player-id',
+  raiseAmount: 'chips-added-including-call',
+  minimumRaiseIncrement: 10,
+  noSidePots: 'cap-to-shortest-live-stack-and-refund-excess',
+  yearScoring: 'absolute-error',
+  numericScoring: 'percentage-error',
+  zeroAnswer: 'exact-only',
+  tiedPayoutRemainder: 'stable-player-id',
+  goldenHintProbability: 0,
+  goldenHint: 'disabled-until-explicitly-configured',
+  earlyFold: 'roll-pot-forward; final-round-last-survivor-wins',
+  hints: 'server-generated-private-numeric-per-player',
+  reconnectGraceMs: 60_000,
+} as const)

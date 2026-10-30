@@ -4,6 +4,9 @@ import type { NextFunction, Request, Response } from 'express'
 import { env } from '../config/env.js'
 import { prisma } from '../db/prisma.js'
 import { HttpError } from '../http/errors.js'
+import { resolveSessionToken } from './sessionToken.js'
+
+export { parseCookies } from './sessionToken.js'
 
 type AuthenticatedSession = {
   sessionId: string
@@ -15,23 +18,6 @@ declare global {
   namespace Express {
     interface Request { auth?: AuthenticatedSession }
   }
-}
-
-export function parseCookies(header: string | undefined): Map<string, string> {
-  const cookies = new Map<string, string>()
-  for (const part of header?.split(';') ?? []) {
-    const separator = part.indexOf('=')
-    if (separator > 0) {
-      const key = part.slice(0, separator).trim()
-      const value = part.slice(separator + 1).trim()
-      try {
-        cookies.set(key, decodeURIComponent(value))
-      } catch {
-        // Ignore malformed cookie values.
-      }
-    }
-  }
-  return cookies
 }
 
 function hashToken(token: string): string {
@@ -145,7 +131,11 @@ export async function requireSession(
   next: NextFunction,
 ): Promise<void> {
   try {
-    const token = parseCookies(request.headers.cookie).get(env.COOKIE_NAME)
+    const token = resolveSessionToken({
+      authorization: request.headers.authorization,
+      cookieHeader: request.headers.cookie,
+      cookieName: env.COOKIE_NAME,
+    })
 
     if (!token || token.length > 128) {
       throw new HttpError(

@@ -16,6 +16,8 @@
     "db:deploy": "prisma migrate deploy",
     "db:seed": "node --env-file=.env --import tsx prisma/seed.ts",
     "questions:validate": "node --import ./scripts/osUserInfoCompat.mjs --import tsx scripts/questionBankCli.ts validate",
+    "questions:export-mobile": "node --import ./scripts/osUserInfoCompat.mjs --import tsx scripts/exportOfflineQuestionPack.ts",
+    "questions:check-mobile": "node --import ./scripts/osUserInfoCompat.mjs --import tsx scripts/exportOfflineQuestionPack.ts --check",
     "questions:import": "node --env-file-if-exists=.env --import ./scripts/osUserInfoCompat.mjs --import tsx scripts/questionBankCli.ts import",
     "questions:validate:built": "node --import ./scripts/osUserInfoCompat.mjs dist/server/scripts/questionBankCli.js validate",
     "questions:import:built": "node --env-file-if-exists=.env --import ./scripts/osUserInfoCompat.mjs dist/server/scripts/questionBankCli.js import",
